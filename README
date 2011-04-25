@@ -1,0 +1,36 @@
+
+libredstone
+===========
+
+*a C library for interfacing with Minecraft file formats and protocols*
+
+This is a (work-in-progress) C library for everything Minecraft. Right
+now, the focus is on reading and writing region and NBT files, but
+this will later expand to include the survival multiplayer protocol,
+to ease writing clients and servers.
+
+Also (eventually) included are a few command-line tools for
+manipulating files and interfacing with SMP servers.
+
+libredstone is highly POSIX reliant, so for Windows users, you'll want
+to compile under cygwin until someone is brave enough to port the mmap
+calls to win32 calls. It also uses a few C99 features so a fairly
+modern compiler is also needed. Other than that, reliance on external
+libraries has been kept to the bare minimum.
+
+libredstone is released under the GNU LGPL, so see COPYING for
+details. The command line tools are licensed under the GPL itself,
+which can be found in tools/COPYING.
+
+Why C?
+------
+
+C is a lowest-common-denominator language, meaning that it is
+relatively easy to use from almost every other language. With
+libredstone, you could write Minecraft tools in C, Python, C#, Ruby, ...
+
+There are a lot of libraries out there written to deal with Minecraft
+stuff, but a ton of them are written in Java or .NET languages, which
+can be *really hard* to work with from other languages. The few C
+libraries that are out there are nice, but usually limited in scope
+(writing region files, in particular, seems to be a rare feature).

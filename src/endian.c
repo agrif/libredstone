@@ -1,3 +1,8 @@
+/*
+ * This file is part of libredstone, and is distributed under the GNU LGPL.
+ * See redstone.h for details.
+ */
+
 #include "endian.h"
 
 #define UNKNOWN_ENDIAN 0
