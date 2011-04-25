@@ -1,0 +1,8 @@
+# OSX noise
+.DS_Store
+
+# CMake generated stuff
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
