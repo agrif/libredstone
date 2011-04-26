@@ -73,6 +73,15 @@ RSNBT* rs_nbt_parse_from_region(RSRegion* region, uint8_t x, uint8_t z)
 
 RSNBT* rs_nbt_parse(void* data, uint32_t len, RSCompressionType enc)
 {
+    uint8_t* expanded = NULL;
+    size_t expanded_size = 0;
+    
+    rs_decompress(enc, data, len, &expanded, &expanded_size);
+    if (!expanded)
+        return NULL;
+    
+    rs_free(expanded);
+    
     RSNBT* self = rs_new(RSNBT, 1);
     return self;
 }

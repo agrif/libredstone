@@ -105,7 +105,7 @@ void rs_decompress(RSCompressionType enc, uint8_t* gzdata, size_t gzdatalen, uin
         }
         
         /* write the data after it */
-        memcpy(outdata + output_write_head, output_buffer, avail);
+        memcpy(*outdata + output_write_head, output_buffer, avail);
         output_write_head += avail;
     } while (strm.avail_out == 0);
     
@@ -204,7 +204,7 @@ void rs_compress(RSCompressionType enc, uint8_t* rawdata, size_t rawdatalen, uin
             
             /* copy output buffer to the end of gzdata */
             *gzdata = rs_realloc(*gzdata, *gzdatalen + avail);
-            memcpy(gzdata + *gzdatalen, output_buffer, avail);
+            memcpy(*gzdata + *gzdatalen, output_buffer, avail);
             *gzdatalen += avail;
         } while (strm.avail_out == 0);
         
