@@ -2,6 +2,7 @@
 .DS_Store
 
 # CMake generated stuff
+build/
 CMakeCache.txt
 CMakeFiles
 Makefile
