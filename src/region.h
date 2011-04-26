@@ -6,18 +6,13 @@
 #ifndef __RS_REGION_H_INCLUDED__
 #define __RS_REGION_H_INCLUDED__
 
+#include "compression.h"
+
 #include <stdint.h>
 #include <stdbool.h>
 
 struct _RSRegion;
 typedef struct _RSRegion RSRegion;
-
-typedef enum
-{
-    RS_GZIP, /* RFC 1952 (usually unused) */
-    RS_ZLIB, /* RFC 1950 */
-    RS_UNKNOWN_COMPRESSION,
-} RSCompressionType;
 
 /* opening/closing */
 RSRegion* rs_region_open(const char* path, bool write);

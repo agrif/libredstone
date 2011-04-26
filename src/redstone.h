@@ -22,11 +22,13 @@
 #include "util.h"
 #include "memory.h"
 #include "endian.h"
+#include "compression.h"
 
 /* data types */
 #include "list.h"
 
 /* save file interfaces */
 #include "region.h"
+#include "nbt.h"
 
 #endif /* __REDSTONE_H_INCLUDED__ */

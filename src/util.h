@@ -10,4 +10,7 @@
 
 #define rs_assert(val) assert(val)
 
+#define MIN(a, b) ((a) > (b) ? (b) : (a))
+#define MAX(a, b) ((a) < (b) ? (b) : (a))
+
 #endif /* __RS_UTIL_H_INCLUDED__ */
