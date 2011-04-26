@@ -25,7 +25,9 @@ int main(int argc, char** argv)
     
     RSNBT* nbt = rs_nbt_open(argv[1]);
     rs_assert(nbt);
-
+    
+    printf("name: %s type: %i\n", rs_nbt_get_name(nbt), 0);
+    
     rs_nbt_free(nbt);
 	return 0;
 }
