@@ -216,6 +216,9 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
         self->cached_writes = rs_list_remove(self->cached_writes, cell);
     }
     
+    if (enc == RS_AUTO_COMPRESSION)
+        enc = rs_get_compression_type(data, len);
+    
     /* now, create a new write struct */
     struct ChunkWrite* job = rs_new0(struct ChunkWrite, 1);
     job->x = x;

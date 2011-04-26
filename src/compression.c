@@ -14,7 +14,7 @@
 /* significantly less hefty 16kb buffers for compressed data */
 #define RS_Z_SMALL_BUFFER_SIZE (1024 * 16)
 
-void rs_level_inflate(uint8_t* gzdata, size_t gzdatalen, uint8_t** outdata, size_t* outdatalen)
+void rs_decompress(RSCompressionType enc, uint8_t* gzdata, size_t gzdatalen, uint8_t** outdata, size_t* outdatalen)
 {
     z_stream strm;
     int ret;
@@ -23,6 +23,14 @@ void rs_level_inflate(uint8_t* gzdata, size_t gzdatalen, uint8_t** outdata, size
        also, this means error */
     *outdata = NULL;
     *outdatalen = 0;
+    
+    /* guess compression type */
+    if (enc == RS_AUTO_COMPRESSION)
+        enc = rs_get_compression_type(gzdata, gzdatalen);
+    
+    /* if it's not GZIP or ZLIB, return error */
+    if (enc != RS_GZIP && enc != RS_ZLIB)
+        return;
     
     /* our output buffer */
     uint8_t output_buffer[RS_Z_BUFFER_SIZE];
@@ -35,8 +43,8 @@ void rs_level_inflate(uint8_t* gzdata, size_t gzdatalen, uint8_t** outdata, size
     strm.avail_in = gzdatalen;
     strm.next_in = gzdata;
     
-    /* magick deflate init to handle gzip headers */
-    ret = inflateInit2(&strm, 16 + MAX_WBITS);
+    /* magick deflate init to handle gzip headers (or not!) */
+    ret = inflateInit2(&strm, (enc == RS_GZIP) ? (16 + MAX_WBITS) : MAX_WBITS);
     if (ret != Z_OK)
     {
         /* data could not be inflated */
@@ -120,7 +128,7 @@ void rs_level_inflate(uint8_t* gzdata, size_t gzdatalen, uint8_t** outdata, size
     /* our data is correct and properly placed, so... */
 }
 
-void rs_level_deflate(uint8_t* rawdata, size_t rawdatalen, uint8_t** gzdata, size_t* gzdatalen)
+void rs_compress(RSCompressionType enc, uint8_t* rawdata, size_t rawdatalen, uint8_t** gzdata, size_t* gzdatalen)
 {
     z_stream strm;
     int ret;
@@ -130,6 +138,10 @@ void rs_level_deflate(uint8_t* rawdata, size_t rawdatalen, uint8_t** gzdata, siz
     /* initialize our output */
     *gzdata = NULL;
     *gzdatalen = 0;
+    
+    /* return error if not gzip or zlib */
+    if (enc != RS_GZIP && enc != RS_ZLIB)
+        return;
     
     /* the buffer we read from -- data is copied in to it */
     uint8_t input_buffer[RS_Z_BUFFER_SIZE];
@@ -144,11 +156,13 @@ void rs_level_deflate(uint8_t* rawdata, size_t rawdatalen, uint8_t** gzdata, siz
     strm.zfree = Z_NULL;
     strm.opaque = Z_NULL;
     
-    /* start deflating, with magick gzip arguments */
+    /* start deflating, with magick gzip arguments (or not) */
     /* RLE -- significantly faster, but very slightly less space efficient */
     /* compression level 1 gives OK results faster -- bandwidth is cheap, latency is not */
     /* FIXME configurable settings! */
-    ret = deflateInit2(&strm, 1, Z_DEFLATED, 16 + MAX_WBITS, 8, Z_RLE);
+    ret = deflateInit2(&strm, 1, Z_DEFLATED,
+                       (enc == RS_GZIP) ? (16 + MAX_WBITS) : MAX_WBITS,
+                       8, Z_RLE);
     if (ret != Z_OK)
     {
         /* level data could not be deflated */
@@ -203,4 +217,24 @@ void rs_level_deflate(uint8_t* rawdata, size_t rawdatalen, uint8_t** gzdata, siz
     
     /* clean up zlib */
     deflateEnd(&strm);
+}
+
+RSCompressionType rs_get_compression_type(void* data, size_t len)
+{
+    if (data == NULL || len < 3)
+        return RS_UNKNOWN_COMPRESSION;
+    
+    uint8_t* bytes = (uint8_t*)data;
+    
+    /* if you're confused about this code, go check out the RFCs! */
+    
+    /* zlib check -- compression type 8, and checksum must work out */
+    if ((bytes[0] & 0x0F) == 0x08 && (((int)bytes[0] << 8) + (int)bytes[1]) % 31 == 0)
+        return RS_ZLIB;
+    
+    /* gzip check -- header bytes and compression type 8 */
+    if (bytes[0] == 0x1f && bytes[1] == 0x8b && bytes[2] == 0x08)
+        return RS_GZIP;
+    
+    return RS_UNKNOWN_COMPRESSION;
 }

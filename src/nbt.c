@@ -22,7 +22,7 @@ struct _RSNBT
     int dummy;
 };
 
-RSNBT* rs_nbt_open(const char* path, RSCompressionType enc)
+RSNBT* rs_nbt_open(const char* path)
 {
     RSNBT* self;
     struct stat stat_buf;
@@ -51,6 +51,7 @@ RSNBT* rs_nbt_open(const char* path, RSCompressionType enc)
         return NULL;
     }
     
+    RSCompressionType enc = rs_get_compression_type(map, stat_buf.st_size);
     self = rs_nbt_parse(map, stat_buf.st_size, enc);
     
     munmap(map, stat_buf.st_size);
