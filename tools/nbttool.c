@@ -122,7 +122,7 @@ int main(int argc, char** argv)
     RSNBT* nbt;
     if (argc == 2)
     {
-        nbt = rs_nbt_open(argv[1]);
+        nbt = rs_nbt_parse_from_file(argv[1]);
     } else {
         int x = atoi(argv[2]);
         int z = atoi(argv[3]);
@@ -130,6 +130,7 @@ int main(int argc, char** argv)
         rs_assert(reg);
         
         nbt = rs_nbt_parse_from_region(reg, x, z);
+        rs_region_close(reg);
     }   
     rs_assert(nbt);
     

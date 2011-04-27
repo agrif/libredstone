@@ -44,9 +44,9 @@ typedef enum
 } RSTagType;
 
 /* reading / freeing */
-RSNBT* rs_nbt_open(const char* path);
 RSNBT* rs_nbt_parse(void* data, uint32_t len, RSCompressionType enc);
 RSNBT* rs_nbt_parse_from_region(RSRegion* region, uint8_t x, uint8_t z);
+RSNBT* rs_nbt_parse_from_file(const char* path);
 void rs_nbt_free(RSNBT* self);
 
 /* getting info */

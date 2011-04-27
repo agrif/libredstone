@@ -63,7 +63,7 @@ struct _RSTag
     };
 };
 
-RSNBT* rs_nbt_open(const char* path)
+RSNBT* rs_nbt_parse_from_file(const char* path)
 {
     RSNBT* self;
     struct stat stat_buf;
