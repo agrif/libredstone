@@ -8,6 +8,7 @@
 #include "util.h"
 #include "memory.h"
 #include "endian.h"
+#include "list.h"
 
 #include <sys/stat.h>
 #include <sys/mman.h>
@@ -24,6 +25,13 @@ struct _RSNBT
     RSTag* root;
 };
 
+/* used in the compound tag RSList */
+typedef struct
+{
+    char* key;
+    RSTag* value;
+} RSTagCompoundNode;
+
 struct _RSTag
 {
     uint32_t refcount;
@@ -31,7 +39,12 @@ struct _RSTag
     
     union
     {
+        int8_t int_byte;
+        int16_t int_short;
+        int32_t int_int;
+        int64_t int_long;
         char* string;
+        RSList* compound;
     };
 };
 
@@ -107,19 +120,84 @@ static inline char* _rs_nbt_parse_string(void** datap, uint32_t* lenp)
 static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
 {
     RSTag* ret = rs_tag_new(type);
-    void* data = *datap;
-    uint32_t len = *lenp;
     
     /* temporary vars used in the switch */
     char* string;
+    uint8_t int_byte;
+    uint16_t int_short;
+    uint32_t int_int;
+    uint64_t int_long;
     
     switch (type)
     {
+    case RS_TAG_BYTE:
+        if (*lenp < 1)
+            break;
+        int_byte = ((uint8_t*)(*datap))[0];
+        rs_tag_set_integer(ret, ((int8_t*)(&int_byte))[0]);
+        *datap += 1;
+        *lenp -= 1;
+        return ret;
+    case RS_TAG_SHORT:
+        if (*lenp < 2)
+            break;
+        int_short = rs_endian_uint16(((uint16_t*)(*datap))[0]);
+        rs_tag_set_integer(ret, ((int16_t*)(&int_short))[0]);
+        *datap += 2;
+        *lenp -= 2;
+        return ret;
+    case RS_TAG_INT:
+        if (*lenp < 4)
+            break;
+        int_int = rs_endian_uint32(((uint32_t*)(*datap))[0]);
+        rs_tag_set_integer(ret, ((int32_t*)(&int_int))[0]);
+        *datap += 4;
+        *lenp -= 4;
+        return ret;
+    case RS_TAG_LONG:
+        if (*lenp < 8)
+            break;
+        int_long = rs_endian_uint64(((uint64_t*)(*datap))[0]);
+        rs_tag_set_integer(ret, ((int64_t*)(&int_long))[0]);
+        *datap += 8;
+        *lenp -= 8;
+        return ret;
+        
     case RS_TAG_STRING:
         string = _rs_nbt_parse_string(datap, lenp);
         rs_tag_set_string(ret, string);
         rs_free(string);
         return ret;
+    case RS_TAG_COMPOUND:
+        while (*lenp > 0)
+        {
+            RSTagType subtype = ((uint8_t*)(*datap))[0];
+            *datap += 1;
+            *lenp -= 1;
+            
+            if (subtype == RS_TAG_END)
+                return ret;
+            
+            string = _rs_nbt_parse_string(datap, lenp);
+            if (!string)
+                break;
+            
+            RSTag* tmptag = _rs_nbt_parse_tag(subtype, datap, lenp);
+            if (!tmptag)
+            {
+                rs_free(string);
+                break;
+            }
+            
+            rs_tag_compound_set(ret, string, tmptag);
+            rs_free(string);
+            rs_tag_unref(tmptag);
+        }
+        
+        /* if we make it here, it's a failure (too little info,
+         * couldn't parse a tag, ...
+         */
+        break;
     };
     
     /* if we get here, it's a failure */
@@ -238,10 +316,28 @@ static void _rs_tag_free(RSTag* self)
     rs_assert(self);
     rs_assert(self->refcount == 0);
     
+    RSList* cell;
+    
     switch (self->type)
     {
     case RS_TAG_STRING:
         rs_free(self->string);
+        break;
+    case RS_TAG_COMPOUND:
+        cell = self->compound;
+        for (; cell != NULL; cell = cell->next)
+        {
+            RSTagCompoundNode* node = (RSTagCompoundNode*)(cell->data);
+            rs_assert(node);
+            rs_assert(node->key);
+            rs_assert(node->value);
+            
+            rs_free(node->key);
+            rs_tag_unref(node->value);
+            rs_free(node);
+        }
+        
+        rs_list_free(self->compound);
         break;
     };
     
@@ -264,6 +360,49 @@ void rs_tag_unref(RSTag* self)
         _rs_tag_free(self);
 }
 
+/* for integers */
+int64_t rs_tag_get_integer(RSTag* self)
+{
+    rs_assert(self);
+    switch (self->type)
+    {
+    case RS_TAG_BYTE:
+        return self->int_byte;
+    case RS_TAG_SHORT:
+        return self->int_short;
+    case RS_TAG_INT:
+        return self->int_int;
+    case RS_TAG_LONG:
+        return self->int_long;
+    };
+    
+    rs_assert(false); /* not an integer! */
+    return 0;
+}
+
+void rs_tag_set_integer(RSTag* self, int64_t val)
+{
+    rs_assert(self);
+    switch (self->type)
+    {
+    case RS_TAG_BYTE:
+        self->int_byte = val;
+        return;
+    case RS_TAG_SHORT:
+        self->int_short = val;
+        return;
+    case RS_TAG_INT:
+        self->int_int = val;
+        return;
+    case RS_TAG_LONG:
+        self->int_long = val;
+        return;
+    };
+    
+    rs_assert(false); /* not an integer */
+}
+
+/* for strings */
 const char* rs_tag_get_string(RSTag* self)
 {
     rs_assert(self && self->type == RS_TAG_STRING);
@@ -276,4 +415,81 @@ void rs_tag_set_string(RSTag* self, const char* str)
     if (self->string)
         rs_free(self->string);
     self->string = rs_strdup(str);
+}
+
+/* for compounds */
+void rs_tag_compound_iterator_init(RSTag* self, RSTagIterator* it)
+{
+    rs_assert(self && self->type == RS_TAG_COMPOUND);
+    rs_assert(it);
+    
+    *it = self->compound;
+}
+
+bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** value)
+{
+    rs_assert(it);
+    
+    RSList* cell = (RSList*)(*it);
+    RSTagCompoundNode* node = (RSTagCompoundNode*)(cell->data);
+    
+    if (key)
+        *key = node->key;
+    if (*value)
+        *value = node->value;
+    
+    *it = cell->next;
+}
+
+RSTag* rs_tag_compound_get(RSTag* self, const char* key)
+{
+    rs_assert(self && self->type == RS_TAG_COMPOUND);
+    rs_assert(key);
+    
+    RSList* cell = self->compound;
+    for (; cell != NULL; cell = cell->next)
+    {
+        RSTagCompoundNode* node = (RSTagCompoundNode*)(cell->data);
+        rs_assert(node && node->key);
+        
+        if (strcmp(node->key, key) == 0)
+            return node->value;
+    }
+    
+    return NULL;
+}
+
+void rs_tag_compound_set(RSTag* self, const char* key, RSTag* value)
+{
+    rs_assert(self && self->type == RS_TAG_COMPOUND);
+    rs_assert(key && value);
+    
+    rs_tag_compound_delete(self, key);
+    
+    RSTagCompoundNode* node = rs_new0(RSTagCompoundNode, 1);
+    
+    node->key = rs_strdup(key);
+    rs_tag_ref(value);
+    node->value = value;
+    
+    self->compound = rs_list_push(self->compound, node);
+}
+
+void rs_tag_compound_delete(RSTag* self, const char* key)
+{
+    rs_assert(self && self->type == RS_TAG_COMPOUND);
+    rs_assert(key);
+    
+    RSList* cell = self->compound;
+    for (; cell != NULL; cell = cell->next)
+    {
+        RSTagCompoundNode* node = (RSTagCompoundNode*)(cell->data);
+        rs_assert(node && node->key);
+        
+        if (strcmp(node->key, key) == 0)
+            break;
+    }
+    
+    if (cell)
+        self->compound = rs_list_remove(self->compound, cell);
 }

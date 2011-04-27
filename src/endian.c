@@ -39,3 +39,24 @@ uint32_t rs_endian_uint32(uint32_t in)
     rs_endian_init();
     return (endianness == LITTLE_ENDIAN) ? (((in & 0x000000FF) << 24) + ((in & 0x0000FF00) << 8) + ((in & 0x00FF0000) >> 8) + ((in & 0xFF000000) >> 24)) : in;
 }
+
+uint64_t rs_endian_uint64(uint64_t in)
+{
+    rs_endian_init();
+    
+    if (endianness == LITTLE_ENDIAN)
+    {
+        uint64_t ret = 0;
+        ret += (in & 0x00000000000000FF) << 56;
+        ret += (in & 0x000000000000FF00) << 40;
+        ret += (in & 0x0000000000FF0000) << 24;
+        ret += (in & 0x00000000FF000000) << 8;
+        ret += (in & 0x000000FF00000000) >> 8;
+        ret += (in & 0x0000FF0000000000) >> 24;
+        ret += (in & 0x00FF000000000000) >> 40;
+        ret += (in & 0xFF00000000000000) >> 56;
+        return ret;
+    }
+    
+    return in;
+}

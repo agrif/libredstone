@@ -18,6 +18,9 @@ typedef struct _RSNBT RSNBT;
 struct _RSTag;
 typedef struct _RSTag RSTag;
 
+/* used by iteration over contained tags, in lists/compounds */
+typedef void* RSTagIterator;
+
 typedef enum
 {
     /* not exposed API-wise, but used internally */
@@ -60,8 +63,19 @@ RSTagType rs_tag_get_type(RSTag* self);
 void rs_tag_ref(RSTag* self);
 void rs_tag_unref(RSTag* self);
 
+/* for (all) integers -- conversion is automatic */
+int64_t rs_tag_get_integer(RSTag* self);
+void rs_tag_set_integer(RSTag* self, int64_t val);
+
 /* for strings */
 const char* rs_tag_get_string(RSTag* self);
 void rs_tag_set_string(RSTag* self, const char* str);
+
+/* for compounds */
+void rs_tag_compound_iterator_init(RSTag* self, RSTagIterator* it);
+bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** value);
+RSTag* rs_tag_compound_get(RSTag* self, const char* key);
+void rs_tag_compound_set(RSTag* self, const char* key, RSTag* value);
+void rs_tag_compound_delete(RSTag* self, const char* key);
 
 #endif /* __RS_NBT_H_INCLUDED__ */
