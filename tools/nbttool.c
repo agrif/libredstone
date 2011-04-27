@@ -75,13 +75,13 @@ void dump_tag(RSTag* tag, const char* name, unsigned int indent)
         printf("%f\n", rs_tag_get_float(tag));
         break;
     case RS_TAG_BYTE_ARRAY:
-        printf("(not yet supported)\n");
+        printf("%u bytes\n", rs_tag_get_byte_array_length(tag));
         break;
     case RS_TAG_STRING:
         printf("%s\n", rs_tag_get_string(tag));
         break;
     case RS_TAG_LIST:
-        printf("%i entries of type %s\n", rs_tag_list_get_length(tag), get_type_name(rs_tag_list_get_type(tag)));
+        printf("%u entries of type %s\n", rs_tag_list_get_length(tag), get_type_name(rs_tag_list_get_type(tag)));
         print_indent(indent);
         printf("{\n");
         
@@ -116,10 +116,21 @@ void dump_tag(RSTag* tag, const char* name, unsigned int indent)
 
 int main(int argc, char** argv)
 {
-    if (argc != 2)
+    if (argc != 2 && argc != 4)
         return 1;
     
-    RSNBT* nbt = rs_nbt_open(argv[1]);
+    RSNBT* nbt;
+    if (argc == 2)
+    {
+        nbt = rs_nbt_open(argv[1]);
+    } else {
+        int x = atoi(argv[2]);
+        int z = atoi(argv[3]);
+        RSRegion* reg = rs_region_open(argv[1], false);
+        rs_assert(reg);
+        
+        nbt = rs_nbt_parse_from_region(reg, x, z);
+    }   
     rs_assert(nbt);
     
     dump_tag(rs_nbt_get_root(nbt), rs_nbt_get_name(nbt), 0);

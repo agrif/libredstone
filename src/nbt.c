@@ -48,6 +48,11 @@ struct _RSTag
         float float_float;
         double float_double;
         
+        struct
+        {
+            uint32_t size;
+            uint8_t* data;
+        } byte_array;
         char* string;
         struct
         {
@@ -194,7 +199,20 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
         *datap += 8;
         *lenp -= 8;
         return ret;
+    
+    case RS_TAG_BYTE_ARRAY:
+        if (*lenp < 4)
+            break;
+        int_int = rs_endian_int32(((int32_t*)(*datap))[0]);
+        *datap += 4;
+        *lenp -= 4;
         
+        if (*lenp < int_int)
+            break;
+        rs_tag_set_byte_array(ret, *datap, int_int);
+        *datap += int_int;
+        *lenp -= int_int;
+        return ret;
     case RS_TAG_STRING:
         string = _rs_nbt_parse_string(datap, lenp);
         rs_tag_set_string(ret, string);
@@ -382,6 +400,9 @@ static void _rs_tag_free(RSTag* self)
     
     switch (self->type)
     {
+    case RS_TAG_BYTE_ARRAY:
+        rs_free(self->byte_array.data);
+        break;
     case RS_TAG_STRING:
         rs_free(self->string);
         break;
@@ -492,6 +513,29 @@ void rs_tag_set_float(RSTag* self, double val)
     }
 }
 
+/* for byte arrays */
+uint8_t* rs_tag_get_byte_array(RSTag* self)
+{
+    rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
+    return self->byte_array.data;
+}
+
+uint32_t rs_tag_get_byte_array_length(RSTag* self)
+{
+    rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
+    return self->byte_array.size;
+}
+
+void rs_tag_set_byte_array(RSTag* self, uint8_t* data, uint32_t len)
+{
+    rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
+    uint8_t* olddata = self->byte_array.data;
+    self->byte_array.data = rs_memdup(data, len);
+    self->byte_array.size = len;
+    if (olddata)
+        rs_free(olddata);
+}
+
 /* for strings */
 const char* rs_tag_get_string(RSTag* self)
 {
@@ -502,9 +546,10 @@ const char* rs_tag_get_string(RSTag* self)
 void rs_tag_set_string(RSTag* self, const char* str)
 {
     rs_assert(self && self->type == RS_TAG_STRING);
-    if (self->string)
-        rs_free(self->string);
+    char* oldstring = self->string;
     self->string = rs_strdup(str);
+    if (oldstring)
+        rs_free(oldstring);
 }
 
 void rs_tag_list_iterator_init(RSTag* self, RSTagIterator* it)

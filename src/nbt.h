@@ -71,6 +71,11 @@ void rs_tag_set_integer(RSTag* self, int64_t val);
 double rs_tag_get_float(RSTag* self);
 void rs_tag_set_float(RSTag* self, double val);
 
+/* for byte arrays */
+uint8_t* rs_tag_get_byte_array(RSTag* self);
+uint32_t rs_tag_get_byte_array_length(RSTag* self);
+void rs_tag_set_byte_array(RSTag* self, uint8_t* data, uint32_t len);
+
 /* for strings */
 const char* rs_tag_get_string(RSTag* self);
 void rs_tag_set_string(RSTag* self, const char* str);
