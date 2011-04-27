@@ -43,6 +43,6 @@ void rs_free(void* ptr);
 #define rs_renew(type, mem, n) ((type*)rs_realloc((mem), sizeof(type) * (n)))
 
 void* rs_memdup(const void* ptr, size_t size);
-#define rs_strdup(str) ((char*)rs_memdup((str), strlen(str)))
+#define rs_strdup(str) ((char*)rs_memdup((str), strlen(str) + 1))
 
 #endif /* __RS_MEMORY_H_INCLUDED__ */

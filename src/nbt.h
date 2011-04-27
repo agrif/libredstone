@@ -90,6 +90,7 @@ void rs_tag_list_reverse(RSTag* self);
 /* for compounds */
 void rs_tag_compound_iterator_init(RSTag* self, RSTagIterator* it);
 bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** value);
+uint32_t rs_tag_compound_get_length(RSTag* self);
 RSTag* rs_tag_compound_get(RSTag* self, const char* key);
 void rs_tag_compound_set(RSTag* self, const char* key, RSTag* value);
 void rs_tag_compound_delete(RSTag* self, const char* key);

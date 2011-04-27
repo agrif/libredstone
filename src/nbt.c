@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
+#include <stdio.h>
 
 /* This implemention of Minecraft's NBT format is based on info from
  * <http://www.minecraft.net/docs/NBT.txt>.
@@ -240,7 +241,6 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
                 return ret;
             
             string = _rs_nbt_parse_string(datap, lenp);
-            printf("parsing %s\n", string);
             if (!string)
                 break;
             
@@ -521,8 +521,13 @@ bool rs_tag_list_iterator_next(RSTagIterator* it, RSTag** tag)
     rs_assert(tag);
     
     RSList* cell = (RSList*)(*it);
+    if (!cell)
+        return false;
+    
     *tag = (RSTag*)(cell->data);
     *it = cell->next;
+    
+    return true;
 }
 
 RSTagType rs_tag_list_get_type(RSTag* self)
@@ -615,6 +620,9 @@ bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** 
     rs_assert(it);
     
     RSList* cell = (RSList*)(*it);
+    if (!cell)
+        return false;
+    
     RSTagCompoundNode* node = (RSTagCompoundNode*)(cell->data);
     
     if (key)
@@ -623,6 +631,14 @@ bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** 
         *value = node->value;
     
     *it = cell->next;
+    
+    return true;
+}
+
+uint32_t rs_tag_compound_get_length(RSTag* self)
+{
+    rs_assert(self && self->type == RS_TAG_COMPOUND);
+    return rs_list_size(self->compound);
 }
 
 RSTag* rs_tag_compound_get(RSTag* self, const char* key)
