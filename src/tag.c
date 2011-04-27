@@ -9,6 +9,8 @@
 #include "memory.h"
 #include "list.h"
 
+#include <stdarg.h>
+
 /* used in the compound tag RSList */
 typedef struct
 {
@@ -46,7 +48,7 @@ struct _RSTag
     };
 };
 
-RSTag* rs_tag_new(RSTagType type)
+RSTag* rs_tag_new0(RSTagType type)
 {
     rs_assert(type != RS_TAG_END);
     
@@ -60,6 +62,55 @@ RSTagType rs_tag_get_type(RSTag* self)
 {
     rs_assert(self);
     return self->type;
+}
+
+RSTag* rs_tag_new(RSTagType type, ...)
+{
+    va_list ap;
+    RSTag* self = rs_tag_new0(type);
+    
+    char* key;
+    RSTag* tag;
+    
+    va_start(ap, type);
+    switch (type)
+    {
+    case RS_TAG_BYTE:
+    case RS_TAG_SHORT:
+    case RS_TAG_INT:
+    case RS_TAG_LONG:
+        rs_tag_set_integer(self, va_arg(ap, int));
+        break;
+    case RS_TAG_FLOAT:
+    case RS_TAG_DOUBLE:
+        rs_tag_set_float(self, va_arg(ap, double));
+        break;
+    case RS_TAG_BYTE_ARRAY:
+        rs_tag_set_byte_array(self, va_arg(ap, int), va_arg(ap, void*));
+        break;
+    case RS_TAG_STRING:
+        rs_tag_set_string(self, va_arg(ap, char*));
+        break;
+    case RS_TAG_LIST:
+        while (tag = va_arg(ap, RSTag*))
+        {
+            rs_tag_list_insert(self, 0, tag);
+        }
+        rs_tag_list_reverse(self);
+        break;
+    case RS_TAG_COMPOUND:
+        while (key = va_arg(ap, char*))
+        {
+            tag = va_arg(ap, RSTag*);
+            rs_assert(tag);
+            
+            rs_tag_compound_set(self, key, tag);
+        }
+        break;
+    };
+    va_end(ap);
+    
+    return self;
 }
 
 /* internal free, used by unref */
@@ -198,7 +249,7 @@ uint32_t rs_tag_get_byte_array_length(RSTag* self)
     return self->byte_array.size;
 }
 
-void rs_tag_set_byte_array(RSTag* self, uint8_t* data, uint32_t len)
+void rs_tag_set_byte_array(RSTag* self, uint32_t len, uint8_t* data)
 {
     rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
     uint8_t* olddata = self->byte_array.data;

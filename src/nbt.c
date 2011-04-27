@@ -103,7 +103,7 @@ static inline char* _rs_nbt_parse_string(void** datap, uint32_t* lenp)
 /* internal helper to parse nbt tags recursively */
 static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
 {
-    RSTag* ret = rs_tag_new(type);
+    RSTag* ret = rs_tag_new0(type);
     
     /* temporary vars used in the switch */
     RSTagType subtype;
@@ -178,7 +178,7 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
         
         if (*lenp < int_int)
             break;
-        rs_tag_set_byte_array(ret, *datap, int_int);
+        rs_tag_set_byte_array(ret, int_int, *datap);
         *datap += int_int;
         *lenp -= int_int;
         return ret;
