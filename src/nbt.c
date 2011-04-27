@@ -21,7 +21,6 @@
 
 struct _RSNBT
 {
-    RSTagType root_type;
     char* root_name;
     RSTag* root;
 };
@@ -62,6 +61,13 @@ struct _RSTag
         RSList* compound;
     };
 };
+
+RSNBT* rs_nbt_new(void)
+{
+    RSNBT* self = rs_new0(RSNBT, 1);
+    rs_nbt_set_name(self, "");
+    return self;
+}
 
 RSNBT* rs_nbt_parse_from_file(const char* path)
 {
@@ -286,7 +292,7 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     return NULL;
 }
 
-RSNBT* rs_nbt_parse(void* data, uint32_t len, RSCompressionType enc)
+RSNBT* rs_nbt_parse(void* data, size_t len, RSCompressionType enc)
 {
     uint8_t* expanded = NULL;
     size_t expanded_size = 0;
@@ -307,7 +313,7 @@ RSNBT* rs_nbt_parse(void* data, uint32_t len, RSCompressionType enc)
     uint32_t left = expanded_size;
     
     /* first, figure out what the root type is */
-    self->root_type = expanded[0];
+    RSTagType root_type = expanded[0];
     read_head++;
     left--;
     
@@ -320,7 +326,7 @@ RSNBT* rs_nbt_parse(void* data, uint32_t len, RSCompressionType enc)
         return NULL;
     }
     
-    self->root = _rs_nbt_parse_tag(self->root_type, &read_head, &left);
+    self->root = _rs_nbt_parse_tag(root_type, &read_head, &left);
     if (self->root == NULL || left != 0)
     {
         rs_free(expanded);
@@ -343,6 +349,133 @@ void rs_nbt_free(RSNBT* self)
     
     rs_free(self);
 }
+
+/* writing */
+
+/* two helpers -- size calculators and writers */
+
+static uint32_t _rs_nbt_tag_length(RSTag* tag)
+{
+    uint32_t tmp = 0;
+    RSTagIterator it;
+    const char* subname;
+    RSTag* subtag;
+    switch (rs_tag_get_type(tag))
+    {
+    case RS_TAG_BYTE:
+        return 1;
+    case RS_TAG_SHORT:
+        return 2;
+    case RS_TAG_INT:
+        return 4;
+    case RS_TAG_LONG:
+        return 8;
+    
+    case RS_TAG_FLOAT:
+        return 4;
+    case RS_TAG_DOUBLE:
+        return 8;
+        
+    case RS_TAG_BYTE_ARRAY:
+        return 4 + rs_tag_get_byte_array_length(tag);
+    case RS_TAG_STRING:
+        return 2 + strlen(rs_tag_get_string(tag));
+    case RS_TAG_LIST:
+        tmp = 1 + 4;
+        rs_tag_list_iterator_init(tag, &it);
+        while (rs_tag_list_iterator_next(&it, &subtag))
+            tmp += _rs_nbt_tag_length(subtag);
+        return tmp;
+    case RS_TAG_COMPOUND:
+        tmp = 1; /* one extra for the TAG_End */
+        rs_tag_compound_iterator_init(tag, &it);
+        while (rs_tag_compound_iterator_next(&it, &subname, &subtag))
+        {
+            tmp += 1; /* type */
+            tmp += 2 + strlen(subname); /* name */
+            tmp += _rs_nbt_tag_length(subtag);
+        }
+        return tmp;
+    };
+    
+    return 0;
+}
+
+static void _rs_nbt_write_tag(RSTag* tag, void* dest)
+{
+}
+
+bool rs_nbt_write(RSNBT* self, void** datap, size_t* lenp, RSCompressionType enc)
+{
+    rs_assert(self);
+    rs_assert(datap && lenp);
+    
+    if (self->root == NULL)
+        return false;
+    if (self->root_name == NULL)
+        return false;
+    
+    /* first, get how big the uncompressed version will be */
+    uint32_t rawlen = _rs_nbt_tag_length(self->root);
+    rawlen += 2 + strlen(self->root_name); /* for name */
+    rawlen += 1; /* for type byte */
+    
+    void* rawbuf = rs_malloc(rawlen);
+    
+    ((uint8_t*)rawbuf)[0] = rs_tag_get_type(self->root);
+    ((int16_t*)(rawbuf + 1))[0] = rs_endian_int16(strlen(self->root_name));
+    memcpy(rawbuf + 3, self->root_name, strlen(self->root_name));
+    _rs_nbt_write_tag(self->root, rawbuf + 3 + strlen(self->root_name));
+    
+    rs_compress(enc, rawbuf, rawlen, (uint8_t**)datap, lenp);
+    rs_free(rawbuf);
+    if (*datap == NULL)
+        return false;
+    return true;
+}
+
+bool rs_nbt_write_to_region(RSNBT* self, RSRegion* region, uint8_t x, uint8_t z)
+{
+    rs_assert(region);
+    
+    void* outdata;
+    size_t outlen;
+    if (!rs_nbt_write(self, &outdata, &outlen, RS_ZLIB))
+        return false;
+    
+    rs_region_set_chunk_data(region, x, z, outdata, outlen, RS_ZLIB);
+    
+    rs_free(outdata);
+    return true;
+}
+
+bool rs_nbt_write_to_file(RSNBT* self, const char* path)
+{
+    void* outdata;
+    size_t outlen;
+    if (!rs_nbt_write(self, &outdata, &outlen, RS_GZIP))
+        return false;
+    
+    FILE* f = fopen(path, "wb");
+    if (!f)
+    {
+        rs_free(outdata);
+        return false;
+    }
+    
+    if (fwrite(outdata, 1, outlen, f) != outlen)
+    {
+        rs_free(outdata);
+        fclose(f);
+        return false;
+    }
+    
+    rs_free(outdata);
+    fclose(f);
+    return true;
+}
+
+/* info getting/setting */
 
 const char* rs_nbt_get_name(RSNBT* self)
 {
@@ -378,6 +511,8 @@ void rs_nbt_set_root(RSNBT* self, RSTag* root)
 
 RSTag* rs_tag_new(RSTagType type)
 {
+    rs_assert(type != RS_TAG_END);
+    
     RSTag* self = rs_new0(RSTag, 1);
     self->refcount = 1;
     self->type = type;

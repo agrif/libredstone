@@ -6,4 +6,7 @@ target_link_libraries(mcrtool redstone)
 add_executable(nbttool nbttool.c)
 target_link_libraries(nbttool redstone)
 
+add_executable(nbtwritetest nbtwritetest.c)
+target_link_libraries(nbtwritetest redstone)
+
 install(TARGETS mcrtool nbttool DESTINATION bin)

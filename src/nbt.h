@@ -43,11 +43,18 @@ typedef enum
     RS_TAG_COMPOUND = 10,
 } RSTagType;
 
-/* reading / freeing */
-RSNBT* rs_nbt_parse(void* data, uint32_t len, RSCompressionType enc);
+/* creating / reading / freeing */
+RSNBT* rs_nbt_new(void);
+RSNBT* rs_nbt_parse(void* data, size_t len, RSCompressionType enc);
 RSNBT* rs_nbt_parse_from_region(RSRegion* region, uint8_t x, uint8_t z);
 RSNBT* rs_nbt_parse_from_file(const char* path);
 void rs_nbt_free(RSNBT* self);
+
+/* writing (returns true on success) */
+bool rs_nbt_write(RSNBT* self, void** datap, size_t* lenp, RSCompressionType enc);
+/* must flush region after writes */
+bool rs_nbt_write_to_region(RSNBT* self, RSRegion* region, uint8_t x, uint8_t z);
+bool rs_nbt_write_to_file(RSNBT* self, const char* path);
 
 /* getting info */
 const char* rs_nbt_get_name(RSNBT* self);

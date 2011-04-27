@@ -20,8 +20,8 @@ typedef enum
     
     /* more specific types */
     
-    RS_GZIP, /* RFC 1952 (usually unused) */
-    RS_ZLIB, /* RFC 1950 */
+    RS_GZIP, /* RFC 1952 (for standalone NBT) */
+    RS_ZLIB, /* RFC 1950 (for region file NBT) */
     RS_UNKNOWN_COMPRESSION,
 } RSCompressionType;
 
