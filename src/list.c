@@ -109,6 +109,21 @@ RSList* rs_list_pop(RSList* first)
     return next;
 }
 
+RSList* rs_list_reverse(RSList* first)
+{
+    RSList* last = NULL;
+    RSList* cell = first;
+    while (cell)
+    {
+        RSList* next = cell->next;
+        cell->next = last;
+        last = cell;
+        cell = next;
+    }
+    
+    return last;
+}
+
 void rs_list_foreach(RSList* first, RSListFunction func)
 {
     while (first)

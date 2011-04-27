@@ -71,6 +71,18 @@ void rs_tag_set_integer(RSTag* self, int64_t val);
 const char* rs_tag_get_string(RSTag* self);
 void rs_tag_set_string(RSTag* self, const char* str);
 
+/* for lists */
+void rs_tag_list_iterator_init(RSTag* self, RSTagIterator* it);
+bool rs_tag_list_iterator_next(RSTagIterator* it, RSTag** tag);
+RSTagType rs_tag_list_get_type(RSTag* self);
+/* type-setting can only be done on EMPTY lists */
+void rs_tag_list_set_type(RSTag* self, RSTagType type);
+uint32_t rs_tag_list_get_length(RSTag* self);
+RSTag* rs_tag_list_get(RSTag* self, uint32_t i);
+void rs_tag_list_delete(RSTag* self, uint32_t i);
+void rs_tag_list_insert(RSTag* self, uint32_t i, RSTag* tag);
+void rs_tag_list_reverse(RSTag* self);
+
 /* for compounds */
 void rs_tag_compound_iterator_init(RSTag* self, RSTagIterator* it);
 bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** value);

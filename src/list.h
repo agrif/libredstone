@@ -28,6 +28,7 @@ RSList* rs_list_remove(RSList* first, RSList* cell);
 
 RSList* rs_list_push(RSList* first, void* data);
 RSList* rs_list_pop(RSList* first);
+RSList* rs_list_reverse(RSList* first);
 
 void rs_list_foreach(RSList* first, RSListFunction func);
 void rs_list_free(RSList* first);
