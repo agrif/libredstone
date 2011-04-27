@@ -366,8 +366,91 @@ static uint32_t _rs_nbt_tag_length(RSTag* tag)
     return 0;
 }
 
-static void _rs_nbt_write_tag(RSTag* tag, void* dest)
+static void _rs_nbt_write_tag(RSTag* tag, void** destp)
 {
+    void* dest = *destp;
+    RSTagIterator it;
+    const char* subname;
+    RSTag* subtag;
+    
+    switch (rs_tag_get_type(tag))
+    {
+    case RS_TAG_BYTE:
+        ((int8_t*)dest)[0] = rs_tag_get_integer(tag);
+        *destp += 1;
+        break;
+    case RS_TAG_SHORT:
+        ((int16_t*)dest)[0] = rs_endian_int16(rs_tag_get_integer(tag));
+        *destp += 2;
+        break;
+    case RS_TAG_INT:
+        ((int32_t*)dest)[0] = rs_endian_int32(rs_tag_get_integer(tag));
+        *destp += 4;
+        break;
+    case RS_TAG_LONG:
+        ((int64_t*)dest)[0] = rs_endian_int64(rs_tag_get_integer(tag));
+        *destp += 8;
+        break;
+
+    case RS_TAG_FLOAT:
+        ((float*)dest)[0] = rs_endian_float(rs_tag_get_float(tag));
+        *destp += 4;
+        break;
+    case RS_TAG_DOUBLE:
+        ((double*)dest)[0] = rs_endian_double(rs_tag_get_float(tag));
+        *destp += 8;
+        break;
+    
+    case RS_TAG_BYTE_ARRAY:
+        ((int32_t*)dest)[0] = rs_endian_int32(rs_tag_get_byte_array_length(tag));
+        dest += 4;
+        memcpy(dest, rs_tag_get_byte_array(tag), rs_tag_get_byte_array_length(tag));
+        dest += rs_tag_get_byte_array_length(tag);
+        *destp = dest;
+        break;
+    case RS_TAG_STRING:
+        subname = rs_tag_get_string(tag);
+        ((int16_t*)(dest))[0] = rs_endian_int16(strlen(subname));
+        dest += 2;
+        memcpy(dest, subname, strlen(subname));
+        dest += strlen(subname);
+        *destp = dest;
+        break;
+    case RS_TAG_LIST:
+        ((uint8_t*)dest)[0] = rs_tag_list_get_type(tag);
+        dest++;
+        ((int32_t*)dest)[0] = rs_endian_int32(rs_tag_list_get_length(tag));
+        dest += 4;
+        *destp = dest;
+        
+        rs_tag_list_iterator_init(tag, &it);
+        while (rs_tag_list_iterator_next(&it, &subtag))
+        {
+            _rs_nbt_write_tag(subtag, destp);
+        }
+        break;
+    case RS_TAG_COMPOUND:
+        rs_tag_compound_iterator_init(tag, &it);
+        while (rs_tag_compound_iterator_next(&it, &subname, &subtag))
+        {
+            ((uint8_t*)dest)[0] = rs_tag_get_type(subtag);
+            dest++;
+            ((int16_t*)(dest))[0] = rs_endian_int16(strlen(subname));
+            dest += 2;
+            memcpy(dest, subname, strlen(subname));
+            dest += strlen(subname);
+            
+            *destp = dest;
+            _rs_nbt_write_tag(subtag, destp);
+            dest = *destp;
+        }
+        
+        ((uint8_t*)dest)[0] = 0;
+        *destp += 1;
+        break;
+    default:
+        rs_assert(false); /* unhandled tag type */
+    };
 }
 
 bool rs_nbt_write(RSNBT* self, void** datap, size_t* lenp, RSCompressionType enc)
@@ -386,11 +469,16 @@ bool rs_nbt_write(RSNBT* self, void** datap, size_t* lenp, RSCompressionType enc
     rawlen += 1; /* for type byte */
     
     void* rawbuf = rs_malloc(rawlen);
+    void* rawhead = rawbuf;
     
-    ((uint8_t*)rawbuf)[0] = rs_tag_get_type(self->root);
-    ((int16_t*)(rawbuf + 1))[0] = rs_endian_int16(strlen(self->root_name));
-    memcpy(rawbuf + 3, self->root_name, strlen(self->root_name));
-    _rs_nbt_write_tag(self->root, rawbuf + 3 + strlen(self->root_name));
+    ((uint8_t*)rawhead)[0] = rs_tag_get_type(self->root);
+    rawhead++;
+    ((int16_t*)(rawhead))[0] = rs_endian_int16(strlen(self->root_name));
+    rawhead += 2;
+    memcpy(rawhead, self->root_name, strlen(self->root_name));
+    rawhead += strlen(self->root_name);
+    
+    _rs_nbt_write_tag(self->root, &rawhead);
     
     rs_compress(enc, rawbuf, rawlen, (uint8_t**)datap, lenp);
     rs_free(rawbuf);

@@ -71,6 +71,9 @@ RSTag* rs_tag_new(RSTagType type, ...)
     
     char* key;
     RSTag* tag;
+    bool first = true;
+    uint32_t len;
+    void* data;
     
     va_start(ap, type);
     switch (type)
@@ -86,7 +89,9 @@ RSTag* rs_tag_new(RSTagType type, ...)
         rs_tag_set_float(self, va_arg(ap, double));
         break;
     case RS_TAG_BYTE_ARRAY:
-        rs_tag_set_byte_array(self, va_arg(ap, int), va_arg(ap, void*));
+        len = va_arg(ap, int);
+        data = va_arg(ap, void*);
+        rs_tag_set_byte_array(self, len, data);
         break;
     case RS_TAG_STRING:
         rs_tag_set_string(self, va_arg(ap, char*));
@@ -94,6 +99,11 @@ RSTag* rs_tag_new(RSTagType type, ...)
     case RS_TAG_LIST:
         while (tag = va_arg(ap, RSTag*))
         {
+            if (first)
+            {
+                rs_tag_list_set_type(self, rs_tag_get_type(tag));
+                first = false;
+            }
             rs_tag_list_insert(self, 0, tag);
         }
         rs_tag_list_reverse(self);
