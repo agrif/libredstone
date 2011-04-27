@@ -627,7 +627,7 @@ bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** 
     
     if (key)
         *key = node->key;
-    if (*value)
+    if (value)
         *value = node->value;
     
     *it = cell->next;
