@@ -66,7 +66,11 @@ void rs_nbt_set_root(RSNBT* self, RSTag* root);
 RSTag* rs_tag_new(RSTagType type);
 RSTagType rs_tag_get_type(RSTag* self);
 
-/* recommended ref/unref memory management */
+/* recommended ref/unref memory management
+ * Note: tags start out with a "floating reference", that is sunk when
+ * it is first ref'd. So, if you create a tag and add it to something,
+ * you don't have to unref it. This is *convenient*.
+ */
 void rs_tag_ref(RSTag* self);
 void rs_tag_unref(RSTag* self);
 

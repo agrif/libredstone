@@ -8,9 +8,7 @@ int main(int argc, char** argv)
     
     RSNBT* nbt = rs_nbt_new();
     
-    RSTag* root = rs_tag_new(RS_TAG_COMPOUND);
-    rs_nbt_set_root(nbt, root);
-    rs_tag_unref(root);
+    rs_nbt_set_root(nbt, rs_tag_new(RS_TAG_COMPOUND));
     rs_nbt_set_name(nbt, "TestNBT");
     
     assert(rs_nbt_write_to_file(nbt, argv[1]));

@@ -277,7 +277,6 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
             
             rs_tag_compound_set(ret, string, tmptag);
             rs_free(string);
-            rs_tag_unref(tmptag);
         }
         
         /* if we make it here, it's a failure (too little info,
@@ -288,7 +287,7 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     
     /* if we get here, it's a failure */
     rs_tag_unref(ret);
-    printf("unhandled tag type: %i\n", type);
+    rs_assert(false);
     return NULL;
 }
 
@@ -333,6 +332,9 @@ RSNBT* rs_nbt_parse(void* data, size_t len, RSCompressionType enc)
         rs_nbt_free(self);
         return NULL;
     }
+    
+    /* now we must sink the floating reference */
+    rs_tag_ref(self->root);
     
     rs_free(expanded);
     return self;
@@ -514,7 +516,7 @@ RSTag* rs_tag_new(RSTagType type)
     rs_assert(type != RS_TAG_END);
     
     RSTag* self = rs_new0(RSTag, 1);
-    self->refcount = 1;
+    self->refcount = 0; /* floating reference */
     self->type = type;
     return self;
 }
@@ -575,9 +577,9 @@ void rs_tag_ref(RSTag* self)
 void rs_tag_unref(RSTag* self)
 {
     rs_assert(self);
-    rs_assert(self->refcount > 0);
-    
-    self->refcount--;
+
+    if (self->refcount > 0)
+        self->refcount--;
     if (self->refcount == 0)
         _rs_tag_free(self);
 }
