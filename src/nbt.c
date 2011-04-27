@@ -44,6 +44,9 @@ struct _RSTag
         int32_t int_int;
         int64_t int_long;
         
+        float float_float;
+        double float_double;
+        
         char* string;
         struct
         {
@@ -130,42 +133,63 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     /* temporary vars used in the switch */
     RSTagType subtype;
     char* string;
-    uint8_t int_byte;
-    uint16_t int_short;
-    uint32_t int_int;
-    uint64_t int_long;
+    
+    int8_t int_byte;
+    int16_t int_short;
+    int32_t int_int;
+    int64_t int_long;
+
+    float float_float;
+    double float_double;
     
     switch (type)
     {
     case RS_TAG_BYTE:
         if (*lenp < 1)
             break;
-        int_byte = ((uint8_t*)(*datap))[0];
-        rs_tag_set_integer(ret, ((int8_t*)(&int_byte))[0]);
+        int_byte = ((int8_t*)(*datap))[0];
+        rs_tag_set_integer(ret, int_byte);
         *datap += 1;
         *lenp -= 1;
         return ret;
     case RS_TAG_SHORT:
         if (*lenp < 2)
             break;
-        int_short = rs_endian_uint16(((uint16_t*)(*datap))[0]);
-        rs_tag_set_integer(ret, ((int16_t*)(&int_short))[0]);
+        int_short = rs_endian_int16(((int16_t*)(*datap))[0]);
+        rs_tag_set_integer(ret, int_short);
         *datap += 2;
         *lenp -= 2;
         return ret;
     case RS_TAG_INT:
         if (*lenp < 4)
             break;
-        int_int = rs_endian_uint32(((uint32_t*)(*datap))[0]);
-        rs_tag_set_integer(ret, ((int32_t*)(&int_int))[0]);
+        int_int = rs_endian_int32(((int32_t*)(*datap))[0]);
+        rs_tag_set_integer(ret, int_int);
         *datap += 4;
         *lenp -= 4;
         return ret;
     case RS_TAG_LONG:
         if (*lenp < 8)
             break;
-        int_long = rs_endian_uint64(((uint64_t*)(*datap))[0]);
-        rs_tag_set_integer(ret, ((int64_t*)(&int_long))[0]);
+        int_long = rs_endian_int64(((int64_t*)(*datap))[0]);
+        rs_tag_set_integer(ret, int_long);
+        *datap += 8;
+        *lenp -= 8;
+        return ret;
+
+    case RS_TAG_FLOAT:
+        if (*lenp < 4)
+            break;
+        float_float = rs_endian_float(((float*)(*datap))[0]);
+        rs_tag_set_float(ret, float_float);
+        *datap += 4;
+        *lenp -= 4;
+        return ret;
+    case RS_TAG_DOUBLE:
+        if (*lenp < 8)
+            break;
+        float_double = rs_endian_double(((double*)(*datap))[0]);
+        rs_tag_set_float(ret, float_double);
         *datap += 8;
         *lenp -= 8;
         return ret;
@@ -181,12 +205,12 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
         subtype = ((uint8_t*)(*datap))[0];
         *datap += 1;
         *lenp -= 1;
-        int_int = rs_endian_uint32(((uint32_t*)(*datap))[0]);
+        int_int = rs_endian_int32(((int32_t*)(*datap))[0]);
         *datap += 4;
         *lenp -= 4;
         
         rs_tag_list_set_type(ret, subtype);
-        if (int_int == 0)
+        if (int_int <= 0)
             return ret;
         
         while (*lenp > 0)
@@ -442,6 +466,30 @@ void rs_tag_set_integer(RSTag* self, int64_t val)
     };
     
     rs_assert(false); /* not an integer */
+}
+
+/* for floats/doubles -- conversion is automatic */
+double rs_tag_get_float(RSTag* self)
+{
+    rs_assert(self);
+    rs_assert(self->type == RS_TAG_FLOAT || self->type == RS_TAG_DOUBLE);
+    
+    if (self->type == RS_TAG_FLOAT)
+        return self->float_float;
+    return self->float_double;
+}
+
+void rs_tag_set_float(RSTag* self, double val)
+{
+    rs_assert(self);
+    rs_assert(self->type == RS_TAG_FLOAT || self->type == RS_TAG_DOUBLE);
+    
+    if (self->type == RS_TAG_FLOAT)
+    {
+        self->float_float = val;
+    } else {
+        self->float_double = val;
+    }
 }
 
 /* for strings */

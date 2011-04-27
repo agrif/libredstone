@@ -67,6 +67,10 @@ void rs_tag_unref(RSTag* self);
 int64_t rs_tag_get_integer(RSTag* self);
 void rs_tag_set_integer(RSTag* self, int64_t val);
 
+/* for floats/doubles -- conversion is automatic */
+double rs_tag_get_float(RSTag* self);
+void rs_tag_set_float(RSTag* self, double val);
+
 /* for strings */
 const char* rs_tag_get_string(RSTag* self);
 void rs_tag_set_string(RSTag* self, const char* str);

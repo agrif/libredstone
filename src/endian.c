@@ -28,6 +28,12 @@ uint16_t rs_endian_uint16(uint16_t in)
     return (endianness == LITTLE_ENDIAN) ? ((in >> 8) | (in << 8)) : in;
 }
 
+int16_t rs_endian_int16(int16_t in)
+{
+    uint16_t tmp = rs_endian_uint16(((uint16_t*)(&in))[0]);
+    return ((int16_t*)(&tmp))[0];
+}
+
 uint32_t rs_endian_uint24(uint32_t in)
 {
     rs_endian_init();
@@ -38,6 +44,12 @@ uint32_t rs_endian_uint32(uint32_t in)
 {
     rs_endian_init();
     return (endianness == LITTLE_ENDIAN) ? (((in & 0x000000FF) << 24) + ((in & 0x0000FF00) << 8) + ((in & 0x00FF0000) >> 8) + ((in & 0xFF000000) >> 24)) : in;
+}
+
+int32_t rs_endian_int32(int32_t in)
+{
+    uint32_t tmp = rs_endian_uint32(((uint32_t*)(&in))[0]);
+    return ((int32_t*)(&tmp))[0];
 }
 
 uint64_t rs_endian_uint64(uint64_t in)
@@ -59,4 +71,22 @@ uint64_t rs_endian_uint64(uint64_t in)
     }
     
     return in;
+}
+
+int64_t rs_endian_int64(int64_t in)
+{
+    uint64_t tmp = rs_endian_uint64(((uint64_t*)(&in))[0]);
+    return ((int64_t*)(&tmp))[0];
+}
+
+float rs_endian_float(float in)
+{
+    uint32_t tmp = rs_endian_uint32(((uint32_t*)(&in))[0]);
+    return ((float*)(&tmp))[0];
+}
+
+double rs_endian_double(double in)
+{
+    uint64_t tmp = rs_endian_uint64(((uint64_t*)(&in))[0]);
+    return ((double*)(&tmp))[0];
 }
