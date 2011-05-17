@@ -14,9 +14,9 @@ void rs_set_memory_functions(RSMemoryFunctions* funcs)
 {
     if (funcs)
     {
-        rs_assert(funcs->malloc);
-        rs_assert(funcs->free);
-        rs_assert(funcs->realloc);
+        rs_return_if_fail(funcs->malloc);
+        rs_return_if_fail(funcs->free);
+        rs_return_if_fail(funcs->realloc);
     }
     
     memfuncs = funcs;
@@ -33,7 +33,8 @@ void* rs_malloc(size_t size)
         ret = malloc(size);
     }
     
-    rs_assert(ret);
+    if (!ret)
+        rs_error("out of memory");
     return ret;
 }
 
@@ -61,7 +62,8 @@ void* rs_realloc(void* ptr, size_t size)
         ret = realloc(ptr, size);
     }
     
-    rs_assert(ret);
+    if (!ret)
+        rs_error("out of memory");
     return ret;
 }
 
@@ -81,7 +83,8 @@ void* rs_malloc0(size_t size)
         ret = calloc(size, 1);
     }
     
-    rs_assert(ret);
+    if (!ret)
+        rs_error("out of memory");
     return ret;
 }           
 

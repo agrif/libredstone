@@ -62,7 +62,8 @@ void rs_decompress(RSCompressionType enc, uint8_t* gzdata, size_t gzdatalen, uin
         ret = inflate(&strm, Z_NO_FLUSH);
         
         /* make sure we're not clobbered */
-        rs_assert(ret != Z_STREAM_ERROR);
+        if (ret == Z_STREAM_ERROR)
+            rs_error("error decompressing stream"); /* FIXME */
         
         /* handle errors */
         switch (ret)
@@ -195,7 +196,7 @@ void rs_compress(RSCompressionType enc, uint8_t* rawdata, size_t rawdatalen, uin
             ret = deflate(&strm, flush);
             
             /* make sure we're not corrupted */
-            rs_assert(ret != Z_STREAM_ERROR);
+            rs_return_if_fail(ret != Z_STREAM_ERROR);
             
             /* FIXME error checking? */
             
@@ -209,11 +210,11 @@ void rs_compress(RSCompressionType enc, uint8_t* rawdata, size_t rawdatalen, uin
         } while (strm.avail_out == 0);
         
         /* be sure we used up all input */
-        rs_assert(strm.avail_in == 0);
+        rs_return_if_fail(strm.avail_in == 0);
     } while (flush != Z_FINISH);
     
     /* we've finished the stream */
-    rs_assert(ret == Z_STREAM_END);
+    rs_return_if_fail(ret == Z_STREAM_END);
     
     /* clean up zlib */
     deflateEnd(&strm);

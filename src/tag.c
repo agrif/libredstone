@@ -50,7 +50,7 @@ struct _RSTag
 
 RSTag* rs_tag_new0(RSTagType type)
 {
-    rs_assert(type != RS_TAG_END);
+    rs_return_val_if_fail(type != RS_TAG_END, NULL);
     
     RSTag* self = rs_new0(RSTag, 1);
     self->refcount = 0; /* floating reference */
@@ -60,7 +60,7 @@ RSTag* rs_tag_new0(RSTagType type)
 
 RSTagType rs_tag_get_type(RSTag* self)
 {
-    rs_assert(self);
+    rs_return_val_if_fail(self, RS_TAG_END);
     return self->type;
 }
 
@@ -112,7 +112,7 @@ RSTag* rs_tag_new(RSTagType type, ...)
         while (key = va_arg(ap, char*))
         {
             tag = va_arg(ap, RSTag*);
-            rs_assert(tag);
+            rs_return_val_if_fail(tag, NULL);
             
             rs_tag_compound_set(self, key, tag);
         }
@@ -126,8 +126,8 @@ RSTag* rs_tag_new(RSTagType type, ...)
 /* internal free, used by unref */
 static void _rs_tag_free(RSTag* self)
 {
-    rs_assert(self);
-    rs_assert(self->refcount == 0);
+    rs_return_if_fail(self);
+    rs_return_if_fail(self->refcount == 0);
     
     RSList* cell;
     
@@ -166,13 +166,13 @@ static void _rs_tag_free(RSTag* self)
 
 void rs_tag_ref(RSTag* self)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     self->refcount++;
 }
 
 void rs_tag_unref(RSTag* self)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
 
     if (self->refcount > 0)
         self->refcount--;
@@ -183,7 +183,7 @@ void rs_tag_unref(RSTag* self)
 /* for integers */
 int64_t rs_tag_get_integer(RSTag* self)
 {
-    rs_assert(self);
+    rs_return_val_if_fail(self, 0);
     switch (self->type)
     {
     case RS_TAG_BYTE:
@@ -196,13 +196,13 @@ int64_t rs_tag_get_integer(RSTag* self)
         return self->int_long;
     };
     
-    rs_assert(false); /* not an integer! */
+    rs_critical("rs_tag_get_integer called on non-integer type");
     return 0;
 }
 
 void rs_tag_set_integer(RSTag* self, int64_t val)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     switch (self->type)
     {
     case RS_TAG_BYTE:
@@ -219,14 +219,14 @@ void rs_tag_set_integer(RSTag* self, int64_t val)
         return;
     };
     
-    rs_assert(false); /* not an integer */
+    rs_critical("rs_tag_set_integer called on non-integer type");
 }
 
 /* for floats/doubles -- conversion is automatic */
 double rs_tag_get_float(RSTag* self)
 {
-    rs_assert(self);
-    rs_assert(self->type == RS_TAG_FLOAT || self->type == RS_TAG_DOUBLE);
+    rs_return_val_if_fail(self, 0.0);
+    rs_return_val_if_fail(self->type == RS_TAG_FLOAT || self->type == RS_TAG_DOUBLE, 0.0);
     
     if (self->type == RS_TAG_FLOAT)
         return self->float_float;
@@ -235,8 +235,8 @@ double rs_tag_get_float(RSTag* self)
 
 void rs_tag_set_float(RSTag* self, double val)
 {
-    rs_assert(self);
-    rs_assert(self->type == RS_TAG_FLOAT || self->type == RS_TAG_DOUBLE);
+    rs_return_if_fail(self);
+    rs_return_if_fail(self->type == RS_TAG_FLOAT || self->type == RS_TAG_DOUBLE);
     
     if (self->type == RS_TAG_FLOAT)
     {
@@ -249,19 +249,19 @@ void rs_tag_set_float(RSTag* self, double val)
 /* for byte arrays */
 uint8_t* rs_tag_get_byte_array(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
+    rs_return_val_if_fail(self && self->type == RS_TAG_BYTE_ARRAY, NULL);
     return self->byte_array.data;
 }
 
 uint32_t rs_tag_get_byte_array_length(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
+    rs_return_val_if_fail(self && self->type == RS_TAG_BYTE_ARRAY, 0);
     return self->byte_array.size;
 }
 
 void rs_tag_set_byte_array(RSTag* self, uint32_t len, uint8_t* data)
 {
-    rs_assert(self && self->type == RS_TAG_BYTE_ARRAY);
+    rs_return_if_fail(self && self->type == RS_TAG_BYTE_ARRAY);
     uint8_t* olddata = self->byte_array.data;
     self->byte_array.data = rs_memdup(data, len);
     self->byte_array.size = len;
@@ -272,13 +272,13 @@ void rs_tag_set_byte_array(RSTag* self, uint32_t len, uint8_t* data)
 /* for strings */
 const char* rs_tag_get_string(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_STRING);
+    rs_return_val_if_fail(self && self->type == RS_TAG_STRING, NULL);
     return self->string;
 }
 
 void rs_tag_set_string(RSTag* self, const char* str)
 {
-    rs_assert(self && self->type == RS_TAG_STRING);
+    rs_return_if_fail(self && self->type == RS_TAG_STRING);
     char* oldstring = self->string;
     self->string = rs_strdup(str);
     if (oldstring)
@@ -287,16 +287,16 @@ void rs_tag_set_string(RSTag* self, const char* str)
 
 void rs_tag_list_iterator_init(RSTag* self, RSTagIterator* it)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
-    rs_assert(it);
+    rs_return_if_fail(self && self->type == RS_TAG_LIST);
+    rs_return_if_fail(it);
     
     *it = self->list.items;
 }
 
 bool rs_tag_list_iterator_next(RSTagIterator* it, RSTag** tag)
 {
-    rs_assert(it);
-    rs_assert(tag);
+    rs_return_val_if_fail(it, false);
+    rs_return_val_if_fail(tag, false);
     
     RSList* cell = (RSList*)(*it);
     if (!cell)
@@ -310,32 +310,36 @@ bool rs_tag_list_iterator_next(RSTagIterator* it, RSTag** tag)
 
 RSTagType rs_tag_list_get_type(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
+    rs_return_val_if_fail(self && self->type == RS_TAG_LIST, RS_TAG_END);
     return self->list.type;
 }
 
 void rs_tag_list_set_type(RSTag* self, RSTagType type)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
-    rs_assert(self->list.items == NULL);
+    rs_return_if_fail(self && self->type == RS_TAG_LIST);
+    if (self->list.items != NULL)
+    {
+        rs_critical("rs_tag_list_set_type called on non-empty list");
+        return;
+    }
     self->list.type = type;
 }
 
 uint32_t rs_tag_list_get_length(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
+    rs_return_val_if_fail(self && self->type == RS_TAG_LIST, 0);
     return rs_list_size(self->list.items);
 }
 
 RSTag* rs_tag_list_get(RSTag* self, uint32_t i)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
+    rs_return_val_if_fail(self && self->type == RS_TAG_LIST, NULL);
     return (RSTag*)rs_list_nth(self->list.items, i);
 }
 
 void rs_tag_list_delete(RSTag* self, uint32_t i)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
+    rs_return_if_fail(self && self->type == RS_TAG_LIST);
     
     RSList* cell = rs_list_nth_cell(self->list.items, i);
     if (cell)
@@ -347,9 +351,9 @@ void rs_tag_list_delete(RSTag* self, uint32_t i)
 
 void rs_tag_list_insert(RSTag* self, uint32_t i, RSTag* tag)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
-    rs_assert(tag);
-    rs_assert(tag->type == self->list.type);
+    rs_return_if_fail(self && self->type == RS_TAG_LIST);
+    rs_return_if_fail(tag);
+    rs_return_if_fail(tag->type == self->list.type);
     
     RSList* cell = rs_list_cell_new();
     
@@ -380,22 +384,22 @@ void rs_tag_list_insert(RSTag* self, uint32_t i, RSTag* tag)
 
 void rs_tag_list_reverse(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_LIST);
+    rs_return_if_fail(self && self->type == RS_TAG_LIST);
     self->list.items = rs_list_reverse(self->list.items);
 }       
 
 /* for compounds */
 void rs_tag_compound_iterator_init(RSTag* self, RSTagIterator* it)
 {
-    rs_assert(self && self->type == RS_TAG_COMPOUND);
-    rs_assert(it);
+    rs_return_if_fail(self && self->type == RS_TAG_COMPOUND);
+    rs_return_if_fail(it);
     
     *it = self->compound;
 }
 
 bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** value)
 {
-    rs_assert(it);
+    rs_return_val_if_fail(it, false);
     
     RSList* cell = (RSList*)(*it);
     if (!cell)
@@ -415,14 +419,14 @@ bool rs_tag_compound_iterator_next(RSTagIterator* it, const char** key, RSTag** 
 
 uint32_t rs_tag_compound_get_length(RSTag* self)
 {
-    rs_assert(self && self->type == RS_TAG_COMPOUND);
+    rs_return_val_if_fail(self && self->type == RS_TAG_COMPOUND, 0);
     return rs_list_size(self->compound);
 }
 
 RSTag* rs_tag_compound_get(RSTag* self, const char* key)
 {
-    rs_assert(self && self->type == RS_TAG_COMPOUND);
-    rs_assert(key);
+    rs_return_val_if_fail(self && self->type == RS_TAG_COMPOUND, NULL);
+    rs_return_val_if_fail(key, NULL);
     
     RSList* cell = self->compound;
     for (; cell != NULL; cell = cell->next)
@@ -439,8 +443,8 @@ RSTag* rs_tag_compound_get(RSTag* self, const char* key)
 
 void rs_tag_compound_set(RSTag* self, const char* key, RSTag* value)
 {
-    rs_assert(self && self->type == RS_TAG_COMPOUND);
-    rs_assert(key && value);
+    rs_return_if_fail(self && self->type == RS_TAG_COMPOUND);
+    rs_return_if_fail(key && value);
     
     rs_tag_compound_delete(self, key);
     
@@ -455,8 +459,8 @@ void rs_tag_compound_set(RSTag* self, const char* key, RSTag* value)
 
 void rs_tag_compound_delete(RSTag* self, const char* key)
 {
-    rs_assert(self && self->type == RS_TAG_COMPOUND);
-    rs_assert(key);
+    rs_return_if_fail(self && self->type == RS_TAG_COMPOUND);
+    rs_return_if_fail(key);
     
     RSList* cell = self->compound;
     for (; cell != NULL; cell = cell->next)

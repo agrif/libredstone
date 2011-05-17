@@ -40,12 +40,13 @@ RSNBT* rs_nbt_parse_from_file(const char* path)
     int fd = open(path, O_RDONLY);
     if (fd < 0)
     {
-        return NULL;
+        return NULL; /* FIXME proper error handling, later */
     }
     
     if (fstat(fd, &stat_buf) < 0)
     {
-        rs_assert(false); /* stat failed */
+        close(fd);
+        return NULL;
     }
     
     if (stat_buf.st_size <= 0)
@@ -70,7 +71,8 @@ RSNBT* rs_nbt_parse_from_file(const char* path)
 
 RSNBT* rs_nbt_parse_from_region(RSRegion* region, uint8_t x, uint8_t z)
 {
-    rs_assert(region);
+    rs_return_val_if_fail(region, NULL);
+    
     void* data = rs_region_get_chunk_data(region, x, z);
     uint32_t  len = rs_region_get_chunk_length(region, x, z);
     RSCompressionType enc = rs_region_get_chunk_compression(region, x, z);
@@ -250,8 +252,7 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     
     /* if we get here, it's a failure */
     rs_tag_unref(ret);
-    rs_assert(false);
-    return NULL;
+    rs_return_val_if_reached(NULL);
 }
 
 RSNBT* rs_nbt_parse(void* data, size_t len, RSCompressionType enc)
@@ -305,7 +306,7 @@ RSNBT* rs_nbt_parse(void* data, size_t len, RSCompressionType enc)
 
 void rs_nbt_free(RSNBT* self)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     
     if (self->root_name)
         rs_free(self->root_name);
@@ -449,17 +450,18 @@ static void _rs_nbt_write_tag(RSTag* tag, void** destp)
         *destp += 1;
         break;
     default:
-        rs_assert(false); /* unhandled tag type */
+        rs_return_if_reached(); /* unhandled tag type */
     };
 }
 
 bool rs_nbt_write(RSNBT* self, void** datap, size_t* lenp, RSCompressionType enc)
 {
-    rs_assert(self);
-    rs_assert(datap && lenp);
+    rs_return_val_if_fail(self, false);
+    rs_return_val_if_fail(datap, false);
+    rs_return_val_if_fail(lenp, false);
     
     if (self->root == NULL)
-        return false;
+        return false; /* TODO proper error handling */
     if (self->root_name == NULL)
         return false;
     
@@ -489,12 +491,12 @@ bool rs_nbt_write(RSNBT* self, void** datap, size_t* lenp, RSCompressionType enc
 
 bool rs_nbt_write_to_region(RSNBT* self, RSRegion* region, uint8_t x, uint8_t z)
 {
-    rs_assert(region);
+    rs_return_val_if_fail(region, false);
     
     void* outdata;
     size_t outlen;
     if (!rs_nbt_write(self, &outdata, &outlen, RS_ZLIB))
-        return false;
+        return false; /* TODO cascading proper error handling */
     
     rs_region_set_chunk_data(region, x, z, outdata, outlen, RS_ZLIB);
     
@@ -532,13 +534,13 @@ bool rs_nbt_write_to_file(RSNBT* self, const char* path)
 
 const char* rs_nbt_get_name(RSNBT* self)
 {
-    rs_assert(self);
+    rs_return_val_if_fail(self, NULL);
     return self->root_name;
 }
 
 void rs_nbt_set_name(RSNBT* self, const char* name)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     if (self->root_name)
         rs_free(self->root_name);
     self->root_name = rs_strdup(name);
@@ -546,13 +548,13 @@ void rs_nbt_set_name(RSNBT* self, const char* name)
 
 RSTag* rs_nbt_get_root(RSNBT* self)
 {
-    rs_assert(self);
+    rs_return_val_if_fail(self, NULL);
     return self->root;
 }
 
 void rs_nbt_set_root(RSNBT* self, RSTag* root)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     if (root)
         rs_tag_ref(root);
     if (self->root)

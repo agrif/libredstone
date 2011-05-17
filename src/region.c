@@ -63,12 +63,13 @@ RSRegion* rs_region_open(const char* path, bool write)
     int fd = open(path, write ? (O_RDWR | O_CREAT) : O_RDONLY, 0666);
     if (fd < 0)
     {
-        return NULL;
+        return NULL; /* TODO proper error handling */
     }
     
     if (fstat(fd, &stat_buf) < 0)
     {
-        rs_assert(false); /* stat failed */
+        close(fd);
+        return NULL;
     }
     
     /* zero size is valid, but anything between 0 and 8192 isn't */
@@ -109,7 +110,7 @@ RSRegion* rs_region_open(const char* path, bool write)
 
 void rs_region_close(RSRegion* self)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     
     if (self->write && self->cached_writes)
         rs_region_flush(self);
@@ -124,8 +125,9 @@ void rs_region_close(RSRegion* self)
 
 uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z)
 {
-    rs_assert(self);
-    if (self->timestamps == NULL || x >= 32 || z >= 32)
+    rs_return_val_if_fail(self, 0);
+    rs_return_val_if_fail(x >= 32 || z >= 32, 0);
+    if (self->timestamps == NULL)
         return 0;
     
     return rs_endian_uint32(self->timestamps[x + 32*z]);
@@ -136,8 +138,9 @@ uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z)
  */
 static void* _rs_region_get_data(RSRegion* self, uint8_t x, uint8_t z)
 {
-    rs_assert(self);
-    if (self->locations == NULL || x >= 32 || z >= 32)
+    rs_return_val_if_fail(self, NULL);
+    rs_return_val_if_fail(x >= 32 || z >= 32, NULL);
+    if (self->locations == NULL)
         return NULL;
     
     return self->map + (rs_endian_uint24(self->locations[x + z*32].offset) * 4096);
@@ -192,10 +195,9 @@ void rs_region_set_chunk_data(RSRegion* self, uint8_t x, uint8_t z, void* data, 
 
 void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* data, uint32_t len, RSCompressionType enc, uint32_t timestamp)
 {
-    rs_assert(self);
-    
-    if (self->write == false || x >= 32 || z >= 32)
-        return;
+    rs_return_if_fail(self);
+    rs_return_if_fail(x >= 32 && z >= 32);
+    rs_return_if_fail(self->write);
     
     /* first, check if there's a cached write already, and clear it if
      * needed
@@ -239,7 +241,7 @@ void rs_region_clear_chunk(RSRegion* self, uint8_t x, uint8_t z)
 /* writes are cached until this is called */
 void rs_region_flush(RSRegion* self)
 {
-    rs_assert(self);
+    rs_return_if_fail(self);
     
     if (self->write && self->cached_writes)
     {
@@ -272,13 +274,13 @@ void rs_region_flush(RSRegion* self)
             /* resize the file, and remap */
             if (ftruncate(self->fd, final_size) < 0)
             {
-                rs_assert(false); /* file resize failed */
+                rs_error("file resize failed"); /* FIXME */
             }
             self->fsize = final_size;
             self->map = mmap(NULL, final_size, PROT_READ | PROT_WRITE, MAP_SHARED, self->fd, 0);
             if (self->map == MAP_FAILED)
             {
-                rs_assert(false); /* remap failed */
+                rs_error("remap failed"); /* FIXME */
             }
             
             self->locations = (struct ChunkLocation*)(self->map);
@@ -322,7 +324,7 @@ void rs_region_flush(RSRegion* self)
                 case RS_ZLIB:
                     enc = 2; break;
                 default:
-                    rs_assert(false); /* unhandled compression type */
+                    rs_return_if_reached(); /* unhandled compression type */
                 };
                 
                 /* write the pre-data header (carefully) */
@@ -343,7 +345,7 @@ void rs_region_flush(RSRegion* self)
              */
             
             /* for now, this is unsupported */
-            rs_assert(false);
+            rs_return_if_reached();
         }
     }
     
@@ -353,6 +355,6 @@ void rs_region_flush(RSRegion* self)
     /* sync the memory */
     if (self->map && msync(self->map, self->fsize, MS_SYNC) < 0)
     {
-        rs_assert(false); /* sync failed */
+        rs_error("sync failed"); /* FIXME */
     }
 }

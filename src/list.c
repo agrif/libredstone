@@ -6,6 +6,7 @@
 #include "list.h"
 
 #include "memory.h"
+#include "error.h"
 
 RSList* rs_list_cell_new(void)
 {
@@ -29,7 +30,10 @@ void* rs_list_nth(RSList* first, unsigned int i)
 {
     RSList* cell = rs_list_nth_cell(first, i);
     if (!cell)
+    {
+        rs_critical("list index out of range: %i", i);
         return NULL;
+    }
     return cell->data;
 }
 
@@ -88,6 +92,7 @@ RSList* rs_list_remove(RSList* first, RSList* cell)
         current = current->next;
     }
     
+    rs_critical("rs_list_remove called on cell not in list");
     return first;
 }
 
@@ -102,7 +107,10 @@ RSList* rs_list_push(RSList* first, void* data)
 RSList* rs_list_pop(RSList* first)
 {
     if (!first)
+    {
+        rs_critical("rs_list_pop called on empty list");
         return NULL;
+    }
     
     RSList* next = first->next;
     rs_free(first);
