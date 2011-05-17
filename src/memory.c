@@ -3,8 +3,8 @@
  * See redstone.h for details.
  */
 
-#include "util.h"
 #include "memory.h"
+#include "error.h"
 
 #include <string.h>
 

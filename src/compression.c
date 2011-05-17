@@ -5,7 +5,7 @@
 
 #include "compression.h"
 
-#include "util.h"
+#include "error.h"
 
 #include <zlib.h>
 

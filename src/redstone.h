@@ -22,6 +22,7 @@
 #include "util.h"
 #include "memory.h"
 #include "endian.h"
+#include "error.h"
 #include "compression.h"
 
 /* data types */

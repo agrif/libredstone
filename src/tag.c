@@ -5,7 +5,7 @@
 
 #include "tag.h"
 
-#include "util.h"
+#include "error.h"
 #include "memory.h"
 #include "list.h"
 

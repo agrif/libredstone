@@ -5,7 +5,7 @@
 
 #include "nbt.h"
 
-#include "util.h"
+#include "error.h"
 #include "memory.h"
 #include "endian.h"
 #include "list.h"
