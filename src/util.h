@@ -6,11 +6,36 @@
 #ifndef __RS_UTIL_H_INCLUDED__
 #define __RS_UTIL_H_INCLUDED__
 
-/* for multiline preprocessor macros */
+/**
+ * \defgroup util Miscellaneous Utilities
+ *
+ * miscellaneous utilities that don't fit anywhere else.
+ *
+ * @{
+ */
+
+/** Begins multi-line preprocessor macros.
+ *
+ * Use this and RS_STMT_END to write multi-line preprocessor macros
+ * that work in places where the compiler only expects one statement.
+ *
+ * \sa RS_STMT_END
+ */
 #define RS_STMT_START do
+
+/** Ends multi-line preprocessor macros.
+ *
+ * Use this and RS_STMT_BEGIN to write multi-line preprocessor macros
+ * that work in places where the compiler only expects one statement.
+ *
+ * \sa RS_STMT_BEGIN
+ */
 #define RS_STMT_END while(0)
 
+/** Minimum macro. */
 #define MIN(a, b) ((a) > (b) ? (b) : (a))
+/** Maximum macro. */
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 
+/** @} */
 #endif /* __RS_UTIL_H_INCLUDED__ */
