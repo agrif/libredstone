@@ -19,16 +19,17 @@
 #include <stdbool.h>
 #include <assert.h>
 
-/** Assert that something is true.
+/**
+ * Assert that something is true.
  *
  * Use this for internal-consistancy checks ONLY, and do NOT use it to
  * check stuff that comes from the outside world. These can be
  * compiled out, so don't use it for checks you always want!
  *
  * For something equivalent to use on user-provided data, use
- * rs_critical, rs_error, and the rs_return_* family of functions.
+ * rs_critical(), rs_error(), and the rs_return_* family of functions.
  *
- * \param val the truth value to check.
+ * \param val the truth value to check
  * \sa rs_critical, rs_error
  * \sa rs_return_if_fail, rs_return_val_if_fail
  * \sa rs_return_if_reached, rs_return_val_if_reached
@@ -38,7 +39,8 @@
 /** Internal log function, don't use! */
 void _rs_error_log(bool error, const char* filename, unsigned int line, const char* func, const char* str, ...);
 
-/** printf-like error logger, non-fatal
+/**
+ * printf-like error logger, non-fatal
  *
  * Use this when the program is not currently crashing, but will
  * likely fail in the future because of some very unexpected error. An
@@ -46,7 +48,7 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
  * parameter. All the rs_return_* variants use this; you should use
  * those if the default error message is sufficient.
  *
- * For a fatal version, see rs_error.
+ * For a fatal version, see rs_error().
  *
  * \sa rs_error
  * \sa rs_return_if_fail, rs_return_val_if_fail
@@ -54,29 +56,31 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
  */
 #define rs_critical(...) _rs_error_log(false, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-/** printf-like error logger, fatal
+/**
+ * printf-like error logger, fatal
  *
  * Use this when a program has hit a dead end, and nothing can be done
  * to salvage it. These should be rare because they cause an immediate
  * exit.
  *
- * For a non-fatal version, see rs_critical.
+ * For a non-fatal version, see rs_critical().
  *
  * \sa rs_critical
  */
 #define rs_error(...) _rs_error_log(true, __FILE__, __LINE__, __func__, __VA_ARGS__)
 
-/** A weaker rs_assert for external bugs.
+/**
+ * A weaker rs_assert() for external bugs.
  *
- * Use this instead of rs_assert for programming errors originating
+ * Use this instead of rs_assert() for programming errors originating
  * outside of libredstone. It will return immediately from the calling
  * function if the test fails, and print out an informative message
  * via rs_critical. This will not exit the program; however, after a
  * call to this function, the program may be in a dangerous state.
  *
- * If you need to return a value, use rs_return_val_if_fail.
+ * If you need to return a value, use rs_return_val_if_fail().
  *
- * \param test the truth value to check.
+ * \param test the truth value to check
  * \sa rs_critical
  * \sa rs_return_val_if_fail
  * \sa rs_return_if_reached, rs_return_val_if_reached
@@ -89,18 +93,19 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
         }                                       \
     } RS_STMT_END
 
-/** A weaker rs_assert for external bugs (with value).
+/**
+ * A weaker rs_assert() for external bugs (with value).
  *
- * Use this instead of rs_assert for programming errors originating
+ * Use this instead of rs_assert() for programming errors originating
  * outside of libredstone. It will return immediately from the calling
  * function if the test fails, and print out an informative message
  * via rs_critical. This will not exit the program; however, after a
  * call to this function, the program may be in a dangerous state.
  *
- * If you don't need to return a value, use rs_return_if_fail.
+ * If you don't need to return a value, use rs_return_if_fail().
  *
- * \param test the truth value to check.
- * \param val the value to return.
+ * \param test the truth value to check
+ * \param val the value to return
  * \sa rs_critical
  * \sa rs_return_if_fail
  * \sa rs_return_if_reached, rs_return_val_if_reached
@@ -113,15 +118,16 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
         }                                                \
     } RS_STMT_END
 
-/** A weaker rs_assert(false) for external bugs.
+/**
+ * A weaker rs_assert(false) for external bugs.
  *
- * Use this instead of rs_assert for programming errors originating
+ * Use this instead of rs_assert() for programming errors originating
  * outside of libredstone. It will return immediately from the calling
  * function, and print out an informative message via
  * rs_critical. This will not exit the program; however, after a call
  * to this function, the program may be in a dangerous state.
  *
- * If you need to return a value, use rs_return_val_if_reached.
+ * If you need to return a value, use rs_return_val_if_reached().
  *
  * \sa rs_critical
  * \sa rs_return_if_fail, rs_return_val_if_fail
@@ -132,17 +138,18 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
         return;                                     \
     } RS_STMT_END
 
-/** A weaker rs_assert(false) for external bugs (with value).
+/**
+ * A weaker rs_assert(false) for external bugs (with value).
  *
- * Use this instead of rs_assert for programming errors originating
+ * Use this instead of rs_assert() for programming errors originating
  * outside of libredstone. It will return immediately from the calling
  * function, and print out an informative message via
  * rs_critical. This will not exit the program; however, after a call
  * to this function, the program may be in a dangerous state.
  *
- * If you don't need to return a value, use rs_return_if_reached.
+ * If you don't need to return a value, use rs_return_if_reached().
  *
- * \param val the value to return.
+ * \param val the value to return
  * \sa rs_critical
  * \sa rs_return_if_fail, rs_return_val_if_fail
  * \sa rs_return_if_reached

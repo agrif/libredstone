@@ -14,7 +14,8 @@
  * @{
  */
 
-/** Begins multi-line preprocessor macros.
+/**
+ * Begins multi-line preprocessor macros.
  *
  * Use this and RS_STMT_END to write multi-line preprocessor macros
  * that work in places where the compiler only expects one statement.
@@ -23,7 +24,8 @@
  */
 #define RS_STMT_START do
 
-/** Ends multi-line preprocessor macros.
+/**
+ * Ends multi-line preprocessor macros.
  *
  * Use this and RS_STMT_BEGIN to write multi-line preprocessor macros
  * that work in places where the compiler only expects one statement.

@@ -26,7 +26,8 @@ typedef void* (*RSRealloc)(void*, void*, size_t);
 /** free function type */
 typedef void (*RSFree)(void*, void*);
 
-/** Memory management vtable.
+/**
+ * Memory management vtable.
  *
  * You can tell libredstone what memory management functions to use by
  * populating a struct like this. All of the functions provided must
@@ -50,131 +51,142 @@ typedef struct
     RSMalloc malloc0;
 } RSMemoryFunctions;
 
-/** Set the memory management vtable.
+/**
+ * Set the memory management vtable.
  *
  * Use this to tell libredstone what memory functions to use. See
  * RSMemoryFunctions for more information.
  *
- * \param funcs the vtable to use.
+ * \param funcs the vtable to use
  * \sa RSMemoryFunctions
  */
 void rs_set_memory_functions(RSMemoryFunctions* funcs);
 
-/** A safer malloc.
+/**
+ * A safer malloc.
  *
  * This function uses the user-provided memory functions, and will
  * automatically check the return value for you. It will never return
  * NULL.
  *
- * You should generally use rs_new instead.
+ * You should generally use rs_new() instead.
  *
- * \param size the amount of memory to allocate.
- * \return the allocated memory.
+ * \param size the amount of memory to allocate
+ * \return the allocated memory
  * \sa rs_malloc0, rs_free, rs_new
  */
 void* rs_malloc(size_t size);
 
-/** A malloc that returns zero-filled buffers.
+/**
+ * A malloc that returns zero-filled buffers.
  *
- * This function is exactly lie rs_malloc, but the buffer it returns
+ * This function is exactly like rs_malloc(), but the buffer it returns
  * is already filled with zeros.
  *
- * You should generally use rs_new0 instead.
+ * You should generally use rs_new0() instead.
  *
- * \param size the amount of memory to allocate.
- * \return the allocated memory, filled with zeros.
+ * \param size the amount of memory to allocate
+ * \return the allocated memory, filled with zeros
  * \sa rs_malloc, rs_free, rs_new0
  */
 void* rs_malloc0(size_t size);
 
-/** A safer realloc.
+/**
+ * A safer realloc.
  *
  * This function uses the user-provided memory functions, and will
  * automatically check the return value for you. It will never return
  * NULL.
  *
  * If you pass a NULL pointer as the original memory, this will just
- * act like a call to rs_malloc.
+ * act like a call to rs_malloc().
  *
- * You should generally use rs_renew instead.
+ * You should generally use rs_renew() instead.
  *
- * \param ptr the memory to reallocate.
- * \param size the amount of memory to allocate.
+ * \param ptr the memory to reallocate
+ * \param size the amount of memory to allocate
  * \sa rs_malloc, rs_free, rs_renew
  */
 void* rs_realloc(void* ptr, size_t size);
 
-/** A safer free.
+/**
+ * A safer free.
  *
- * This function uses the user-provided memory functions, and will do nothing if the pointer provided is NULL.
+ * This function uses the user-provided memory functions, and will do
+ * nothing if the pointer provided is NULL.
  *
- * \param ptr the memory to free.
+ * \param ptr the memory to free
  * \sa rs_malloc
  */
 void rs_free(void* ptr);
 
-/** Dynamic array allocator.
+/**
+ * Dynamic array allocator.
  *
- * This function uses rs_malloc to create a dynamic array with the
+ * This function uses rs_malloc() to create a dynamic array with the
  * given type and length, and automatically casts it to the correct
- * pointer type. You should use this instead of rs_malloc, most of the
+ * pointer type. You should use this instead of rs_malloc(), most of the
  * time.
  *
- * \param type the type to allocate for.
- * \param n the number of elements to allocate.
- * \return the allocated memory.
+ * \param type the type to allocate for
+ * \param n the number of elements to allocate
+ * \return the allocated memory
  * \sa rs_free, rs_new0
  */
 #define rs_new(type, n) ((type*)rs_malloc(sizeof(type) * (n)))
 
-/** Dynamic array allocator (zero-initialized).
+/**
+ * Dynamic array allocator (zero-initialized).
  *
- * This function uses rs_malloc0 to create a dynamic array with the
+ * This function uses rs_malloc0() to create a dynamic array with the
  * given type and length, and automatically casts it to the correct
- * pointer type. You should use this instead of rs_malloc0, most of the
+ * pointer type. You should use this instead of rs_malloc0(), most of the
  * time.
  *
- * \param type the type to allocate for.
- * \param n the number of elements to allocate.
- * \return the allocated memory (filled with zeros).
+ * \param type the type to allocate for
+ * \param n the number of elements to allocate
+ * \return the allocated memory (filled with zeros)
  * \sa rs_free, rs_new
  */
 #define rs_new0(type, n) ((type*)rs_malloc0(sizeof(type) * (n)))
 
-/** Dynamic array reallocator.
+/**
+ * Dynamic array reallocator.
  *
- * This function uses rs_realloc to resize a dynamic array returned by
- * rs_new. You should generally use this instead of rs_realloc.
+ * This function uses rs_realloc() to resize a dynamic array returned by
+ * rs_new(). You should generally use this instead of rs_realloc().
  *
- * \param type the type to allocate for.
- * \param mem the old memory to reallocate.
- * \param n the number of elements to allocate.
- * \return the allocated memory.
+ * \param type the type to allocate for
+ * \param mem the old memory to reallocate
+ * \param n the number of elements to allocate
+ * \return the allocated memory
  * \sa rs_free, rs_new
  */
 #define rs_renew(type, mem, n) ((type*)rs_realloc((mem), sizeof(type) * (n)))
 
-/** Convenience memory duplicator.
+/**
+ * Convenience memory duplicator.
  *
  * This function will duplicate the memory given, and return the
  * duplicate as a freshly-allocated array that must be freed with
- * rs_free.
+ * rs_free().
  *
- * \param ptr the memory to duplicate.
- * \param size the number of bytes to duplicate.
- * \return the duplicated memory.
+ * \param ptr the memory to duplicate
+ * \param size the number of bytes to duplicate
+ * \return the duplicated memory
  * \sa rs_free, rs_strdup
  */
 void* rs_memdup(const void* ptr, size_t size);
 
-/** Convenience string duplicator.
+/**
+ * Convenience string duplicator.
  *
- * This function duplicates the given string (using rs_memdup) and
+ * This function duplicates the given string (using rs_memdup()) and
  * returns the duplicate as a freshly-allocated chunk of memory that
- * must be freed with rs_free.
+ * must be freed with rs_free().
  *
- * \param str the string to duplicate.
- * \return the duplicated string.
+ * \param str the string to duplicate
+ * \return the duplicated string
  * \sa rs_free, rs_memdup
  */
 #define rs_strdup(str) ((char*)rs_memdup((str), strlen(str) + 1))
