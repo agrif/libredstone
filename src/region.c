@@ -126,7 +126,7 @@ void rs_region_close(RSRegion* self)
 uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z)
 {
     rs_return_val_if_fail(self, 0);
-    rs_return_val_if_fail(x >= 32 || z >= 32, 0);
+    rs_return_val_if_fail(x < 32 && z < 32, 0);
     if (self->timestamps == NULL)
         return 0;
     
@@ -139,7 +139,7 @@ uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z)
 static void* _rs_region_get_data(RSRegion* self, uint8_t x, uint8_t z)
 {
     rs_return_val_if_fail(self, NULL);
-    rs_return_val_if_fail(x >= 32 || z >= 32, NULL);
+    rs_return_val_if_fail(x < 32 && z < 32, NULL);
     if (self->locations == NULL)
         return NULL;
     
@@ -196,7 +196,7 @@ void rs_region_set_chunk_data(RSRegion* self, uint8_t x, uint8_t z, void* data, 
 void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* data, uint32_t len, RSCompressionType enc, uint32_t timestamp)
 {
     rs_return_if_fail(self);
-    rs_return_if_fail(x >= 32 && z >= 32);
+    rs_return_if_fail(x < 32 && z < 32);
     rs_return_if_fail(self->write);
     
     /* first, check if there's a cached write already, and clear it if
