@@ -18,17 +18,27 @@
 #include "redstone.h"
 #include <stdio.h>
 
+const char* get_compression_string(RSCompressionType type)
+{
+    switch (type)
+    {
+    case RS_ZLIB:
+        return "zlib";
+    case RS_GZIP:
+        return "gzip";
+    };
+    
+    return "unknown";
+}
+
 int main(int argc, char** argv)
 {
-    if (argc != 3)
+    if (argc != 2)
         return 1;
     
     RSRegion* reg = rs_region_open(argv[1], false);
     rs_assert(reg);
 
-    RSRegion* write = rs_region_open(argv[2], true);
-    rs_assert(write);
-    
     int x = 0, z = 0;
     for (z = 0; z < 32; z++)
     {
@@ -36,29 +46,13 @@ int main(int argc, char** argv)
         {
             if (rs_region_contains_chunk(reg, x, z))
             {
-                break;
+                const char* comp = get_compression_string(rs_region_get_chunk_compression(reg, x, z));
+                printf("(%i, %i) [%i] %i bytes (%s)\n", x, z, rs_region_get_chunk_timestamp(reg, x, z), rs_region_get_chunk_length(reg, x, z), comp);
             }
         }
-        if (rs_region_contains_chunk(reg, x, z))
-            break;
     }
     
-    int dx, dz;
-    for (dz = 0; dz < 32; dz++)
-    {
-        for (dx = 0; dx < 32; dx++)
-        {
-            rs_region_set_chunk_data(write, dx, dz,
-                                     rs_region_get_chunk_data(reg, x, z),
-                                     rs_region_get_chunk_length(reg, x, z),
-                                     rs_region_get_chunk_compression(reg, x, z));
-        }
-    }
-
-    printf("writing...\n");
-    rs_region_close(write);
     rs_region_close(reg);
-    printf("done.\n");
-    
+
 	return 0;
 }
