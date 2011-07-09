@@ -26,7 +26,7 @@ RSCompressionType rs_region_get_chunk_compression(RSRegion* self, uint8_t x, uin
 void* rs_region_get_chunk_data(RSRegion* self, uint8_t x, uint8_t z);
 
 /* convenience */
-#define rs_region_contains_chunk(self, x, z) (rs_region_get_chunk_timestamp((self), (x), (z)) == 0 ? false : true)
+#define rs_region_contains_chunk(self, x, z) (rs_region_get_chunk_timestamp((self), (x), (z)) == 0 || (int32_t)rs_region_get_chunk_length((self), (x), (z)) <= 0 ? false : true)
 
 /* low-level chunk writing -- pointers to data must remain valid until
  * flush is called. Region must be opened with write == true.
