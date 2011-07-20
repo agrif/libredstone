@@ -187,9 +187,64 @@ void rs_tag_unref(RSTag* self)
         _rs_tag_free(self);
 }
 
+RSTag* rs_tag_find(RSTag* self, const char* name)
+{
+    rs_return_val_if_fail(self && self->type != RS_TAG_END, NULL);
+    rs_return_val_if_fail(name, NULL);
+    
+    RSTag* subtag;
+    RSTagIterator it;
+    
+    switch (rs_tag_get_type(self))
+    {
+    case RS_TAG_END:
+        rs_assert(false);
+    case RS_TAG_BYTE:
+    case RS_TAG_SHORT:
+    case RS_TAG_INT:
+    case RS_TAG_LONG:
+    case RS_TAG_FLOAT:
+    case RS_TAG_DOUBLE:
+    case RS_TAG_BYTE_ARRAY:
+    case RS_TAG_STRING:
+        /* leaf nodes, no children */
+        return NULL;
+    case RS_TAG_LIST:
+        /* search each element */
+        rs_tag_list_iterator_init(self, &it);
+        while (rs_tag_list_iterator_next(&it, &subtag))
+        {
+            RSTag* found = rs_tag_find(subtag, name);
+            if (found)
+                return found;
+        }
+        
+        return NULL;
+    case RS_TAG_COMPOUND:
+        /* first, check to see if it's in this compound */
+        subtag = rs_tag_compound_get(self, name);
+        if (subtag)
+            return subtag;
+
+        /* search each element */
+        rs_tag_compound_iterator_init(self, &it);
+        while (rs_tag_compound_iterator_next(&it, NULL, &subtag))
+        {
+            RSTag* found = rs_tag_find(subtag, name);
+            if (found)
+                return found;
+        }
+        
+        return NULL;
+    default:
+        rs_return_val_if_reached(NULL);
+    };
+    rs_return_val_if_reached(NULL);
+}
+
 void rs_tag_print(RSTag* self, FILE* dest)
 {
-    rs_return_if_fail(self && self != RS_TAG_END);
+    rs_return_if_fail(self && self->type != RS_TAG_END);
     rs_return_if_fail(dest);
     
     uint32_t length, i;

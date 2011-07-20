@@ -63,6 +63,10 @@ RSTag* rs_tag_new(RSTagType type, ...);
 void rs_tag_ref(RSTag* self);
 void rs_tag_unref(RSTag* self);
 
+/* finds the first tag with this name, recursively */
+RSTag* rs_tag_find(RSTag* self, const char* name);
+
+/* helpers for writing out tags */
 void rs_tag_print(RSTag* self, FILE* dest);
 void rs_tag_pretty_print(RSTag* self, FILE* dest);
 
