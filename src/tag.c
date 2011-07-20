@@ -187,6 +187,193 @@ void rs_tag_unref(RSTag* self)
         _rs_tag_free(self);
 }
 
+void rs_tag_print(RSTag* self, FILE* dest)
+{
+    rs_return_if_fail(self && self != RS_TAG_END);
+    rs_return_if_fail(dest);
+    
+    uint32_t length, i;
+    RSTagIterator it;
+    RSTag* subtag;
+    const char* subname;
+
+    switch (rs_tag_get_type(self))
+    {
+    case RS_TAG_END:
+        rs_assert(false);
+    case RS_TAG_BYTE:
+    case RS_TAG_SHORT:
+    case RS_TAG_INT:
+    case RS_TAG_LONG:
+        fprintf(dest, "%Li", rs_tag_get_integer(self));
+        break;
+    case RS_TAG_FLOAT:
+    case RS_TAG_DOUBLE:
+        fprintf(dest, "%f", rs_tag_get_float(self));
+        break;
+    case RS_TAG_BYTE_ARRAY:
+        length = rs_tag_get_byte_array_length(self);
+        fwrite(rs_tag_get_byte_array(self), 1, length, dest);
+        break;
+    case RS_TAG_STRING:
+        fprintf(dest, "%s", rs_tag_get_string(self));
+        break;
+    case RS_TAG_LIST:
+        length = rs_tag_list_get_length(self);        
+        fprintf(dest, "[");
+        
+        rs_tag_list_iterator_init(self, &it);
+        i = 0;
+        while (rs_tag_list_iterator_next(&it, &subtag))
+        {
+            i++;
+            if (subtag->type == RS_TAG_STRING)
+                fprintf(dest, "\"");
+            rs_tag_print(subtag, dest);
+            if (subtag->type == RS_TAG_STRING)
+                fprintf(dest, "\"");
+            if (i != length)
+                fprintf(dest, ", ");
+        }
+        
+        fprintf(dest, "]");
+        break;
+    case RS_TAG_COMPOUND:
+        length = rs_tag_compound_get_length(self);
+        fprintf(dest, "{");
+        
+        rs_tag_compound_iterator_init(self, &it);
+        i = 0;
+        while (rs_tag_compound_iterator_next(&it, &subname, &subtag))
+        {
+            printf("\"%s\": ", subname);
+            
+            i++;
+            if (subtag->type == RS_TAG_STRING)
+                fprintf(dest, "\"");
+            rs_tag_print(subtag, dest);
+            if (subtag->type == RS_TAG_STRING)
+                fprintf(dest, "\"");
+            if (i != length)
+                fprintf(dest, ", ");
+        }
+        
+        fprintf(dest, "}");
+        break;
+    default:
+        rs_return_if_reached();
+    };
+}
+
+/* helper for rs_tag_pretty_print */
+static inline const char* rs_tag_get_type_name(RSTagType type)
+{
+    switch (type)
+    {
+    case RS_TAG_END: return "TAG_End";
+    case RS_TAG_BYTE: return "TAG_Byte";
+    case RS_TAG_SHORT: return "TAG_Short";
+    case RS_TAG_INT: return "TAG_Int";
+    case RS_TAG_LONG: return "TAG_Long";
+    case RS_TAG_FLOAT: return "TAG_Float";
+    case RS_TAG_DOUBLE: return "TAG_Double";
+    case RS_TAG_BYTE_ARRAY: return "TAG_Byte_Array";
+    case RS_TAG_STRING: return "TAG_String";
+    case RS_TAG_LIST: return "TAG_List";
+    case RS_TAG_COMPOUND: return "TAG_Compound";
+    }
+    
+    return "TAG_Unknown";
+}
+
+/* helper for rs_tag_pretty_print */
+static inline void rs_tag_print_indent(FILE* dest, unsigned int indent)
+{
+    while (indent > 0)
+    {
+        fprintf(dest, "    ");
+        indent--;
+    }
+}
+
+/* inner part of rs_tag_pretty_print */
+static void rs_tag_print_inner(FILE* dest, RSTag* tag, const char* name, unsigned int indent)
+{
+    rs_assert(tag);
+    rs_assert(dest);
+    rs_return_if_fail(tag->type != RS_TAG_END);
+    
+    rs_tag_print_indent(dest, indent);
+    fprintf(dest, "%s", rs_tag_get_type_name(rs_tag_get_type(tag)));
+    if (name)
+        fprintf(dest, "(\"%s\")", name);
+    fprintf(dest, ": ");
+    
+    RSTagIterator it;
+    const char* subname;
+    RSTag* subtag;
+    
+    switch (rs_tag_get_type(tag))
+    {
+    case RS_TAG_END:
+        rs_assert(false);
+    case RS_TAG_BYTE:
+    case RS_TAG_SHORT:
+    case RS_TAG_INT:
+    case RS_TAG_LONG:
+        fprintf(dest, "%Li\n", rs_tag_get_integer(tag));
+        break;
+    case RS_TAG_FLOAT:
+    case RS_TAG_DOUBLE:
+        fprintf(dest, "%f\n", rs_tag_get_float(tag));
+        break;
+    case RS_TAG_BYTE_ARRAY:
+        fprintf(dest, "%u bytes\n", rs_tag_get_byte_array_length(tag));
+        break;
+    case RS_TAG_STRING:
+        fprintf(dest, "%s\n", rs_tag_get_string(tag));
+        break;
+    case RS_TAG_LIST:
+        fprintf(dest, "%u entries of type %s\n", rs_tag_list_get_length(tag), rs_tag_get_type_name(rs_tag_list_get_type(tag)));
+        rs_tag_print_indent(dest, indent);
+        fprintf(dest, "{\n");
+        
+        rs_tag_list_iterator_init(tag, &it);
+        while (rs_tag_list_iterator_next(&it, &subtag))
+        {
+            rs_tag_print_inner(dest, subtag, NULL, indent + 1);
+        }
+        
+        rs_tag_print_indent(dest, indent);
+        fprintf(dest, "}\n");
+        break;
+    case RS_TAG_COMPOUND:
+        fprintf(dest, "%i entries\n", rs_tag_compound_get_length(tag));
+        rs_tag_print_indent(dest, indent);
+        fprintf(dest, "{\n");
+        
+        rs_tag_compound_iterator_init(tag, &it);
+        while (rs_tag_compound_iterator_next(&it, &subname, &subtag))
+        {
+            rs_tag_print_inner(dest, subtag, subname, indent + 1);
+        }
+        
+        rs_tag_print_indent(dest, indent);
+        fprintf(dest, "}\n");
+        break;
+    default:
+        rs_return_if_reached();
+    };
+}
+
+void rs_tag_pretty_print(RSTag* self, FILE* dest)
+{
+    rs_return_if_fail(self);
+    rs_return_if_fail(dest);
+    
+    rs_tag_print_inner(dest, self, NULL, 0);
+}
+
 /* for integers */
 int64_t rs_tag_get_integer(RSTag* self)
 {
@@ -458,7 +645,6 @@ RSTag* rs_tag_compound_get_chainv(RSTag* self, va_list ap)
     {
         if (tag->type != RS_TAG_COMPOUND)
         {
-            rs_critical("incorrect tag chain");
             return NULL;
         }
         tag = rs_tag_compound_get(tag, key);

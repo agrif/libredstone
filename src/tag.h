@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdarg.h>
 
 struct _RSTag;
@@ -61,6 +62,9 @@ RSTag* rs_tag_new(RSTagType type, ...);
  */
 void rs_tag_ref(RSTag* self);
 void rs_tag_unref(RSTag* self);
+
+void rs_tag_print(RSTag* self, FILE* dest);
+void rs_tag_pretty_print(RSTag* self, FILE* dest);
 
 /* for (all) integers -- conversion is automatic */
 int64_t rs_tag_get_integer(RSTag* self);
