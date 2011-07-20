@@ -448,6 +448,37 @@ RSTag* rs_tag_compound_get(RSTag* self, const char* key)
     return NULL;
 }
 
+RSTag* rs_tag_compound_get_chainv(RSTag* self, va_list ap)
+{
+    rs_return_val_if_fail(self && self->type == RS_TAG_COMPOUND, NULL);
+
+    const char* key;
+    RSTag* tag = self;
+    while (tag && (key = va_arg(ap, const char*)))
+    {
+        if (tag->type != RS_TAG_COMPOUND)
+        {
+            rs_critical("incorrect tag chain");
+            return NULL;
+        }
+        tag = rs_tag_compound_get(tag, key);
+    }
+    
+    return tag;
+}
+
+RSTag* rs_tag_compound_get_chain(RSTag* self, ...)
+{
+    va_list ap;
+    RSTag* tag;
+    
+    va_start(ap, self);
+    tag = rs_tag_compound_get_chainv(self, ap);
+    va_end(ap);
+    
+    return tag;
+}
+
 void rs_tag_compound_set(RSTag* self, const char* key, RSTag* value)
 {
     rs_return_if_fail(self && self->type == RS_TAG_COMPOUND);

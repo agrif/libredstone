@@ -85,12 +85,12 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
  * \sa rs_return_val_if_fail
  * \sa rs_return_if_reached, rs_return_val_if_reached
  */
-#define rs_return_if_fail(test) RS_STMT_START { \
-        if (!(test))                            \
-        {                                       \
-            rs_critical(#test " failed.");      \
-            return;                             \
-        }                                       \
+#define rs_return_if_fail(test) RS_STMT_START {     \
+        if (!(test))                                \
+        {                                           \
+            rs_critical("\"" #test "\" failed.");   \
+            return;                                 \
+        }                                           \
     } RS_STMT_END
 
 /**
@@ -113,7 +113,7 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
 #define rs_return_val_if_fail(test, val) RS_STMT_START { \
         if (!(test))                                     \
         {                                                \
-            rs_critical(#test " failed.");               \
+            rs_critical("\"" #test "\" failed.");        \
             return val;                                  \
         }                                                \
     } RS_STMT_END
