@@ -38,8 +38,7 @@ int main(int argc, char** argv)
     }   
     rs_assert(nbt);
     
-    rs_tag_pretty_print(rs_nbt_get_root(nbt), stdout);
-    
+    rs_nbt_pretty_print(nbt, stdout);
     rs_nbt_free(nbt);
 	return 0;
 }

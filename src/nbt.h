@@ -35,4 +35,10 @@ void rs_nbt_set_name(RSNBT* self, const char* name);
 RSTag* rs_nbt_get_root(RSNBT* self);
 void rs_nbt_set_root(RSNBT* self, RSTag* root);
 
+/* conveniences that call equivalent functions on root tag */
+#define rs_nbt_find(self, name) (rs_tag_find(rs_nbt_get_root(self), (name)))
+#define rs_nbt_print(self, dest) (rs_tag_print(rs_nbt_get_root(self), (dest)))
+#define rs_nbt_pretty_print(self, dest) (rs_tag_pretty_print(rs_nbt_get_root(self), (dest)))
+#define rs_nbt_get_chain(self, ...) (rs_tag_compound_get_chain(rs_nbt_get_root(self), __VA_ARGS__))
+
 #endif /* __RS_NBT_H_INCLUDED__ */
