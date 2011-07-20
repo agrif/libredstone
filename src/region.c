@@ -114,8 +114,8 @@ void rs_region_close(RSRegion* self)
     
     if (self->write && self->cached_writes)
         rs_region_flush(self);
+    rs_assert(self->cached_writes == NULL);
     
-    rs_list_free(self->cached_writes);
     rs_free(self->path);
     if (self->map)
         munmap(self->map, self->fsize);
@@ -214,18 +214,23 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
     
     if (cell)
     {
-        rs_free(cell->data);
+        struct ChunkWrite* write = cell->data;
+        rs_free(write->data);
+        rs_free(write);
         self->cached_writes = rs_list_remove(self->cached_writes, cell);
     }
     
     if (enc == RS_AUTO_COMPRESSION)
         enc = rs_get_compression_type(data, len);
     
+    /* copy the data */
+    void* data_copy = memcpy(rs_malloc(len), data, len);
+    
     /* now, create a new write struct */
     struct ChunkWrite* job = rs_new0(struct ChunkWrite, 1);
     job->x = x;
     job->z = z;
-    job->data = data;
+    job->data = data_copy;
     job->length = len;
     job->encoding = enc;
     job->timestamp = timestamp;
@@ -243,6 +248,8 @@ void rs_region_flush(RSRegion* self)
 {
     rs_return_if_fail(self);
     
+    RSList* cell;
+    
     if (self->write && self->cached_writes)
     {
         /* check to see if this is a brand-new file */
@@ -252,7 +259,7 @@ void rs_region_flush(RSRegion* self)
             
             /* first, figure out how big the file needs to be */
             uint32_t final_size = 0;
-            RSList* cell = self->cached_writes;
+            cell = self->cached_writes;
             for (; cell != NULL; cell = cell->next)
             {
                 struct ChunkWrite* write = cell->data;
@@ -349,6 +356,14 @@ void rs_region_flush(RSRegion* self)
         }
     }
     
+    /* clear the cached writes */
+    cell = self->cached_writes;
+    for (; cell != NULL; cell = cell->next)
+    {
+        struct ChunkWrite* write = cell->data;
+        rs_free(write->data);
+        rs_free(write);
+    }
     rs_list_free(self->cached_writes);
     self->cached_writes = NULL;
     

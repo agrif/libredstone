@@ -28,7 +28,7 @@ void* rs_region_get_chunk_data(RSRegion* self, uint8_t x, uint8_t z);
 /* convenience */
 #define rs_region_contains_chunk(self, x, z) (rs_region_get_chunk_timestamp((self), (x), (z)) == 0 || (int32_t)rs_region_get_chunk_length((self), (x), (z)) <= 0 ? false : true)
 
-/* low-level chunk writing -- pointers to data must remain valid until
+/* low-level chunk writing -- data is copied and stored until
  * flush is called. Region must be opened with write == true.
  */
 void rs_region_set_chunk_data(RSRegion* self, uint8_t x, uint8_t z, void* data, uint32_t len, RSCompressionType enc);
