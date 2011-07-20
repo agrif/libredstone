@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
-project(redstone C)
+project(libredstone C)
 set(LIBREDSTONE_VERSION "0.0.0")
+
+set(CMAKE_BUILD_TYPE Release)
 
 # custom modules
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
