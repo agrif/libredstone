@@ -9,8 +9,6 @@
 #include "memory.h"
 #include "list.h"
 
-#include <stdarg.h>
-
 /* used in the compound tag RSList */
 typedef struct
 {
@@ -67,6 +65,17 @@ RSTagType rs_tag_get_type(RSTag* self)
 RSTag* rs_tag_new(RSTagType type, ...)
 {
     va_list ap;
+    RSTag* self;
+    
+    va_start(ap, type);
+    self = rs_tag_newv(type, ap);
+    va_end(ap);
+    
+    return self;
+}
+
+RSTag* rs_tag_newv(RSTagType type, va_list ap)
+{
     RSTag* self = rs_tag_new0(type);
     
     char* key;
@@ -75,7 +84,6 @@ RSTag* rs_tag_new(RSTagType type, ...)
     uint32_t len;
     void* data;
     
-    va_start(ap, type);
     switch (type)
     {
     case RS_TAG_BYTE:
@@ -118,7 +126,6 @@ RSTag* rs_tag_new(RSTagType type, ...)
         }
         break;
     };
-    va_end(ap);
     
     return self;
 }

@@ -8,6 +8,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdarg.h>
 
 struct _RSTag;
 typedef struct _RSTag RSTag;
@@ -50,6 +51,7 @@ RSTagType rs_tag_get_type(RSTag* self);
  * lists:         rs_tag_new(RS_TAG_LIST, tag1, tag2, tag3, NULL);
  * compounds:     rs_tag_new(RS_TAG_COMPOUND, "key1", tag1, "key2", tag2, NULL);
  */
+RSTag* rs_tag_newv(RSTagType type, va_list ap);
 RSTag* rs_tag_new(RSTagType type, ...);
 
 /* recommended ref/unref memory management
