@@ -12,4 +12,7 @@ target_link_libraries(nbttool redstone)
 add_executable(nbtwritetest nbtwritetest.c)
 target_link_libraries(nbtwritetest redstone)
 
+add_executable(mapgen mapgen.c)
+target_link_libraries(mapgen redstone)
+
 install(TARGETS mcrtool nbttool DESTINATION bin)
