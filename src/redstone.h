@@ -21,7 +21,7 @@
 /* utilities */
 #include "util.h"
 #include "memory.h"
-#include "endian.h"
+#include "rsendian.h"
 #include "error.h"
 #include "compression.h"
 

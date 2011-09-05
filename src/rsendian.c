@@ -3,7 +3,7 @@
  * See redstone.h for details.
  */
 
-#include "endian.h"
+#include "rsendian.h"
 
 #define UNKNOWN_ENDIAN 0
 #define BIG_ENDIAN 1

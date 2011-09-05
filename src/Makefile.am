@@ -7,7 +7,7 @@ INCLUDES = -I$(top_srcdir)
 
 H_FILES =         \
     compression.h \
-    endian.h      \
+    rsendian.h    \
     error.h       \
     list.h        \
     memory.h      \
@@ -19,7 +19,7 @@ H_FILES =         \
 
 C_FILES =         \
     compression.c \
-    endian.c      \
+    rsendian.c    \
     error.c       \
     list.c        \
     memory.c      \

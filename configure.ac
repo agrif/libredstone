@@ -51,7 +51,7 @@ AC_SUBST(LIBREDSTONE_VERSION, libredstone_version)
 AC_DEFINE(LIBREDSTONE_LT_VERSION, "libredstone_lt_version", [libredstone libtool version])
 AC_SUBST(LIBREDSTONE_LT_VERSION, libredstone_lt_version)
 
-AM_INIT_AUTOMAKE([1.11 foreign dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([1.11 foreign nostdinc dist-bzip2 no-dist-gzip])
 AM_MAINTAINER_MODE([enable])
 
 AM_SILENT_RULES([yes])

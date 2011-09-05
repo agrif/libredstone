@@ -7,7 +7,7 @@
 
 #include "error.h"
 #include "memory.h"
-#include "endian.h"
+#include "rsendian.h"
 #include "list.h"
 
 #include <sys/stat.h>
