@@ -192,7 +192,7 @@ DX_CLEANFILES = \
     $(DX_CLEAN_PDF) \
     $(DX_CLEAN_LATEX)
 
-all-local : doxygen-doc
+@DX_DOCDIR@ : doxygen-doc
 mostlyclean-local :
 	rm -rf $(DX_CLEANFILES)
 	rm -rf @DX_DOCDIR@
@@ -200,5 +200,11 @@ mostlyclean-local :
 # distribute generated documentation
 dist-hook: doxygen-doc
 	cp -r @DX_DOCDIR@ $(distdir)/
+
+install-data-local: doxygen-doc
+	test -d @DX_DOCDIR@ && cp -r @DX_DOCDIR@ $(DESTDIR)$(docdir)
+
+uninstall-local:
+	rm -rf $(DESTDIR)$(docdir)/@DX_DOCDIR@
 
 endif DX_COND_doc

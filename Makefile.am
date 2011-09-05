@@ -2,6 +2,8 @@ ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
 
 SUBDIRS = src tools doc
 
+doc_DATA = README COPYING
+
 # copied from libpeas -- git => ChangeLog!
 dist-hook:
 	@if test -d "$(top_srcdir)/.git"; \
