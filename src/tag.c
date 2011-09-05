@@ -260,7 +260,7 @@ void rs_tag_print(RSTag* self, FILE* dest)
     case RS_TAG_SHORT:
     case RS_TAG_INT:
     case RS_TAG_LONG:
-        fprintf(dest, "%Li", rs_tag_get_integer(self));
+        fprintf(dest, "%Li", (long long)rs_tag_get_integer(self));
         break;
     case RS_TAG_FLOAT:
     case RS_TAG_DOUBLE:
@@ -268,7 +268,8 @@ void rs_tag_print(RSTag* self, FILE* dest)
         break;
     case RS_TAG_BYTE_ARRAY:
         length = rs_tag_get_byte_array_length(self);
-        fwrite(rs_tag_get_byte_array(self), 1, length, dest);
+        if (length != fwrite(rs_tag_get_byte_array(self), 1, length, dest))
+            rs_critical("could not write entire byte array");
         break;
     case RS_TAG_STRING:
         fprintf(dest, "%s", rs_tag_get_string(self));
@@ -376,7 +377,7 @@ static void rs_tag_print_inner(FILE* dest, RSTag* tag, const char* name, unsigne
     case RS_TAG_SHORT:
     case RS_TAG_INT:
     case RS_TAG_LONG:
-        fprintf(dest, "%Li\n", rs_tag_get_integer(tag));
+        fprintf(dest, "%Li\n", (long long)rs_tag_get_integer(tag));
         break;
     case RS_TAG_FLOAT:
     case RS_TAG_DOUBLE:
