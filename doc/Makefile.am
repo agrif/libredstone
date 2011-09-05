@@ -105,6 +105,8 @@ endif DX_COND_xml
 
 if DX_COND_ps
 
+DX_LATEX_ARGS = $(DX_LATEX) -interaction=batchmode
+
 DX_CLEAN_PS = @DX_DOCDIR@/@PACKAGE@.ps
 
 DX_PS_GOAL = doxygen-ps
@@ -114,17 +116,17 @@ doxygen-ps: @DX_DOCDIR@/@PACKAGE@.ps
 @DX_DOCDIR@/@PACKAGE@.ps: @DX_DOCDIR@/@PACKAGE@.tag
 	$(DX_V_LATEX) cd @DX_DOCDIR@/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
-	$(DX_LATEX) refman.tex; \
-	$(MAKEINDEX_PATH) refman.idx; \
-	$(DX_LATEX) refman.tex; \
+	$(DX_LATEX_ARGS) refman.tex 1>/dev/null; \
+	$(DX_MAKEINDEX) refman.idx 1>/dev/null 2>&1; \
+	$(DX_LATEX_ARGS) refman.tex 1>/dev/null; \
 	countdown=5; \
 	while $(DX_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
 	                  refman.log > /dev/null 2>&1 \
 	   && test $$countdown -gt 0; do \
-	    $(DX_LATEX) refman.tex; \
+	    $(DX_LATEX_ARGS) refman.tex 1>/dev/null; \
 	    countdown=`expr $$countdown - 1`; \
 	done; \
-	$(DX_DVIPS) -o ../@PACKAGE@.ps refman.dvi
+	$(DX_DVIPS) -o ../@PACKAGE@.ps refman.dvi 1>/dev/null 2>&1
 
 endif DX_COND_ps
 
@@ -133,6 +135,8 @@ endif DX_COND_ps
 ## ------------------------------ ##
 
 if DX_COND_pdf
+
+DX_PDFLATEX_ARGS = $(DX_PDFLATEX) -interaction=batchmode
 
 DX_CLEAN_PDF = @DX_DOCDIR@/@PACKAGE@.pdf
 
@@ -143,14 +147,14 @@ doxygen-pdf: @DX_DOCDIR@/@PACKAGE@.pdf
 @DX_DOCDIR@/@PACKAGE@.pdf: @DX_DOCDIR@/@PACKAGE@.tag
 	$(DX_V_LATEX) cd @DX_DOCDIR@/latex; \
 	rm -f *.aux *.toc *.idx *.ind *.ilg *.log *.out; \
-	$(DX_PDFLATEX) refman.tex; \
-	$(DX_MAKEINDEX) refman.idx; \
-	$(DX_PDFLATEX) refman.tex; \
+	$(DX_PDFLATEX_ARGS) refman.tex 1>/dev/null; \
+	$(DX_MAKEINDEX) refman.idx 1>/dev/null 2>&1; \
+	$(DX_PDFLATEX_ARGS) refman.tex 1>/dev/null; \
 	countdown=5; \
 	while $(DX_EGREP) 'Rerun (LaTeX|to get cross-references right)' \
 	                  refman.log > /dev/null 2>&1 \
 	   && test $$countdown -gt 0; do \
-	    $(DX_PDFLATEX) refman.tex; \
+	    $(DX_PDFLATEX_ARGS) refman.tex 1>/dev/null; \
 	    countdown=`expr $$countdown - 1`; \
 	done; \
 	mv refman.pdf ../@PACKAGE@.pdf
