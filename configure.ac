@@ -4,11 +4,41 @@ dnl =============================
 
 AC_PREREQ(2.63.2)
 
+dnl user-facing version number, usual (major.minor.patch) scheme
 m4_define(libredstone_major_version, 0)
 m4_define(libredstone_minor_version, 0)
 m4_define(libredstone_patch_version, 0)
 
+dnl libtool library version, current:revision:age scheme
+m4_define(libredstone_lt_current_version, 0)
+m4_define(libredstone_lt_revision_version, 0)
+m4_define(libredstone_lt_age_version, 0)
+
+dnl Handy notes for version management!
+dnl -----------------------------------
+dnl
+dnl Patch should be bumped for any release that does not change the interface.
+dnl Minor should be bumped for most interface-changing releases.
+dnl Major should be bumped any time there is a major restructuring.
+dnl
+dnl Note that minor changes should *try* to remain
+dnl backwards-compatible, and that the 1.0.0 release may have the same
+dnl structure as the 0.x.x releases. The '0' major version is special
+dnl that way.
+dnl
+dnl For the libtool version:
+dnl * If the code has changed at all, bump revision.
+dnl * If any interfaces have changed, bump current ant set revision to 0.
+dnl * If there are new interfaces, bump age.
+dnl * If there are backwards-incompatible changes, set age to 0.
+dnl
+dnl With this in mind, a patch version will just bump revision. A
+dnl minor version will *usually* bump current and age, and set
+dnl revision to 0. A major version will bump current and set revision
+dnl and age to 0.
+
 m4_define(libredstone_version, [libredstone_major_version.libredstone_minor_version.libredstone_patch_version])
+m4_define(libredstone_lt_version, [libredstone_lt_current_version:libredstone_lt_revision_version:libredstone_lt_age_version])
 
 AC_INIT([libredstone], [libredstone_version])
 
@@ -16,15 +46,10 @@ AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_SRCDIR([src/redstone.h])
 AC_CONFIG_MACRO_DIR([m4])
 
-AC_DEFINE(LIBREDSTONE_MAJOR_VERSION, libredstone_major_version, [libredstone major version])
-AC_SUBST(LIBREDSTONE_MAJOR_VERSION, libredstone_major_version)
-AC_DEFINE(LIBREDSTONE_MINOR_VERSION, libredstone_minor_version, [libredstone minor version])
-AC_SUBST(LIBREDSTONE_MINOR_VERSION, libredstone_minor_version)
-AC_DEFINE(LIBREDSTONE_PATCH_VERSION, libredstone_patch_version, [libredstone patch version])
-AC_SUBST(LIBREDSTONE_PATCH_VERSION, libredstone_patch_version)
-
 AC_DEFINE(LIBREDSTONE_VERSION, "libredstone_version", [libredstone version])
 AC_SUBST(LIBREDSTONE_VERSION, libredstone_version)
+AC_DEFINE(LIBREDSTONE_LT_VERSION, "libredstone_lt_version", [libredstone libtool version])
+AC_SUBST(LIBREDSTONE_LT_VERSION, libredstone_lt_version)
 
 AM_INIT_AUTOMAKE([1.11 foreign dist-bzip2 no-dist-gzip])
 AM_MAINTAINER_MODE([enable])

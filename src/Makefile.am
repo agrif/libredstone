@@ -31,4 +31,6 @@ libredstone_la_SOURCES = \
     $(C_FILES)           \
     $(H_FILES)
 
+libredstone_la_LDFLAGS = -version-info $(LIBREDSTONE_LT_VERSION)
+
 pkginclude_HEADERS = $(H_FILES)
