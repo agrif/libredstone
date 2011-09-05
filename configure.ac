@@ -70,7 +70,8 @@ dnl =================
 dnl Dependency Checks
 dnl =================
 
-AX_CHECK_ZLIB
+AC_CHECK_HEADER(zlib.h, [], AC_MSG_ERROR([libredstone needs zlib installed to function]))
+AC_CHECK_LIB(z, inflateEnd, [LIBS="-lz $LIBS"], AC_MSG_ERROR([libredstone needs zlib installed to function]))
 
 dnl =======
 dnl Doxygen
