@@ -281,11 +281,10 @@ DX_ARG_ABLE(pdf, [generate doxygen PDF documentation],
              DX_REQUIRE_PROG([DX_EGREP], egrep)])
 
 # LaTeX generation for PS and/or PDF:
+AM_CONDITIONAL(DX_COND_latex, DX_TEST_FEATURE(ps) || DX_TEST_FEATURE(pdf))
 if DX_TEST_FEATURE(ps) || DX_TEST_FEATURE(pdf); then
-    AM_CONDITIONAL(DX_COND_latex, :)
     DX_ENV_APPEND(GENERATE_LATEX, YES)
 else
-    AM_CONDITIONAL(DX_COND_latex, false)
     DX_ENV_APPEND(GENERATE_LATEX, NO)
 fi
 

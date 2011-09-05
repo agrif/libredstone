@@ -192,7 +192,7 @@ DX_CLEANFILES = \
     $(DX_CLEAN_PDF) \
     $(DX_CLEAN_LATEX)
 
-@DX_DOCDIR@ : doxygen-doc
+all-local: doxygen-doc
 mostlyclean-local :
 	rm -rf $(DX_CLEANFILES)
 	rm -rf @DX_DOCDIR@

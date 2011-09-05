@@ -77,6 +77,8 @@ dnl Doxygen
 dnl =======
 
 DX_HTML_FEATURE(ON)
+DX_PDF_FEATURE(OFF)
+DX_PS_FEATURE(OFF)
 DX_INIT_DOXYGEN($PACKAGE_NAME, [Doxyfile], [reference])
 
 AM_COND_IF([DX_COND_doc], [build_docs=yes], [build_docs=no])
