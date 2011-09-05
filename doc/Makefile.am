@@ -206,7 +206,7 @@ dist-hook: doxygen-doc
 	cp -r @DX_DOCDIR@ $(distdir)/
 
 install-data-local: doxygen-doc
-	test -d @DX_DOCDIR@ && cp -r @DX_DOCDIR@ $(DESTDIR)$(docdir)
+	test -d @DX_DOCDIR@ && $(MKDIR_P) $(DESTDIR)$(docdir) && cp -r @DX_DOCDIR@ $(DESTDIR)$(docdir)
 
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/@DX_DOCDIR@

@@ -81,11 +81,6 @@ ebegin "automake"
 automake --gnu --add-missing --copy
 eend $?
 
-ebegin "configure"
+#ebegin "configure"
 ./configure --enable-maintainer-mode $@
-eend $?
-
-echo
-echo "  The source is now prepared."
-echo "  Type \`make' to build libredstone."
-echo
+#eend $?

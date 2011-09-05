@@ -71,6 +71,7 @@ if test "$av_cv_prog_cc_c99" == "no"; then
 fi
 
 AC_PROG_INSTALL
+AC_PROG_MKDIR_P
 
 LT_PREREQ([2.2.6])
 LT_INIT
@@ -125,4 +126,7 @@ Configuration:
         Compiler               : $CC
         Installation prefix    : $prefix
         Build documentation    : $build_docs
+
+    The source is now prepared.
+    Type \`make' to build libredstone.
 "
