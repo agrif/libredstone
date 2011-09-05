@@ -26,6 +26,9 @@ const char* get_compression_string(RSCompressionType type)
         return "zlib";
     case RS_GZIP:
         return "gzip";
+    default:
+        /* fall through to "unknown" */
+        break;
     };
     
     return "unknown";

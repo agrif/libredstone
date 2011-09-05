@@ -12,6 +12,7 @@
 
 #include <sys/stat.h>
 #include <sys/mman.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
 
@@ -248,6 +249,9 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
          * couldn't parse a tag, ...
          */
         break;
+    default:
+        /* uh-oh, continue on to error */
+        break;
     };
     
     /* if we get here, it's a failure */
@@ -362,6 +366,8 @@ static uint32_t _rs_nbt_tag_length(RSTag* tag)
             tmp += _rs_nbt_tag_length(subtag);
         }
         return tmp;
+    default:
+        rs_return_val_if_reached(0);
     };
     
     return 0;

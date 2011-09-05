@@ -105,7 +105,7 @@ RSTag* rs_tag_newv(RSTagType type, va_list ap)
         rs_tag_set_string(self, va_arg(ap, char*));
         break;
     case RS_TAG_LIST:
-        while (tag = va_arg(ap, RSTag*))
+        while ((tag = va_arg(ap, RSTag*)))
         {
             if (first)
             {
@@ -117,7 +117,7 @@ RSTag* rs_tag_newv(RSTagType type, va_list ap)
         rs_tag_list_reverse(self);
         break;
     case RS_TAG_COMPOUND:
-        while (key = va_arg(ap, char*))
+        while ((key = va_arg(ap, char*)))
         {
             tag = va_arg(ap, RSTag*);
             rs_return_val_if_fail(tag, NULL);
@@ -125,6 +125,9 @@ RSTag* rs_tag_newv(RSTagType type, va_list ap)
             rs_tag_compound_set(self, key, tag);
         }
         break;
+    default:
+        rs_tag_unref(self);
+        rs_return_val_if_reached(NULL);
     };
     
     return self;
@@ -165,6 +168,9 @@ static void _rs_tag_free(RSTag* self)
         }
         
         rs_list_free(self->compound);
+        break;
+    default:
+        /* if it's not listed, we'll assume it needs no special handling */
         break;
     };
     
@@ -444,6 +450,9 @@ int64_t rs_tag_get_integer(RSTag* self)
         return self->int_int;
     case RS_TAG_LONG:
         return self->int_long;
+    default:
+        /* fall through to error */
+        break;
     };
     
     rs_critical("rs_tag_get_integer called on non-integer type");
@@ -467,6 +476,9 @@ void rs_tag_set_integer(RSTag* self, int64_t val)
     case RS_TAG_LONG:
         self->int_long = val;
         return;
+    default:
+        /* fall through to error */
+        break;
     };
     
     rs_critical("rs_tag_set_integer called on non-integer type");

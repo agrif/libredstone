@@ -81,12 +81,16 @@ int64_t rs_endian_int64(int64_t in)
 
 float rs_endian_float(float in)
 {
-    uint32_t tmp = rs_endian_uint32(((uint32_t*)(&in))[0]);
-    return ((float*)(&tmp))[0];
+    void* tmp_p = (void*)(&in);
+    uint32_t tmp = rs_endian_uint32(((uint32_t*)tmp_p)[0]);
+    tmp_p = (void*)(&tmp);
+    return ((float*)tmp_p)[0];
 }
 
 double rs_endian_double(double in)
 {
-    uint64_t tmp = rs_endian_uint64(((uint64_t*)(&in))[0]);
-    return ((double*)(&tmp))[0];
+    void* tmp_p = (void*)(&in);
+    uint64_t tmp = rs_endian_uint64(((uint64_t*)tmp_p)[0]);
+    tmp_p = (void*)(&tmp);
+    return ((double*)tmp_p)[0];
 }
