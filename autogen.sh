@@ -47,7 +47,7 @@ eend()
     exec 2>&5
     exec 3>&-
     
-    printf "%$(( COLS - LAST_LEN - 7 ))s%b\n" '' "$msg"
+    printf "%$(( COLS - LAST_LEN - 8 ))s%b\n" '' "$msg"
     
     if [[ $1 != "0" ]]; then
         printf "\n"

@@ -51,7 +51,7 @@ AC_SUBST(LIBREDSTONE_VERSION, libredstone_version)
 AC_DEFINE(LIBREDSTONE_LT_VERSION, "libredstone_lt_version", [libredstone libtool version])
 AC_SUBST(LIBREDSTONE_LT_VERSION, libredstone_lt_version)
 
-AM_INIT_AUTOMAKE([1.11 foreign nostdinc dist-bzip2 no-dist-gzip])
+AM_INIT_AUTOMAKE([1.11 -Wall foreign nostdinc dist-bzip2 no-dist-gzip])
 AM_MAINTAINER_MODE([enable])
 
 AM_SILENT_RULES([yes])
@@ -61,10 +61,25 @@ dnl Basic Compiler Checks
 dnl =====================
 
 AC_PROG_CC
+if test "$GCC" == "yes"; then
+   CFLAGS="-Wall $CFLAGS"
+fi
+AC_PROG_CC_C_O
+AC_PROG_CC_C99
+if test "$av_cv_prog_cc_c99" == "no"; then
+   AC_MSG_ERROR([libredstone requires a C99-compliant C compiler])
+fi
+
 AC_PROG_INSTALL
 
 LT_PREREQ([2.2.6])
 LT_INIT
+
+AC_HEADER_ASSERT
+AC_FUNC_MALLOC
+AC_FUNC_REALLOC
+AC_FUNC_STAT
+AC_CHECK_FUNC(mmap, [], AC_MSG_ERROR([libredstone needs a mmap implementation to work]))
 
 dnl =================
 dnl Dependency Checks
