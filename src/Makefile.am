@@ -1,0 +1,34 @@
+# ==================
+# libredstone itself
+# ==================
+
+lib_LTLIBRARIES = libredstone.la
+INCLUDES = -I$(top_srcdir)
+
+H_FILES =         \
+    compression.h \
+    endian.h      \
+    error.h       \
+    list.h        \
+    memory.h      \
+    nbt.h         \
+    region.h      \
+    tag.h         \
+    util.h        \
+    redstone.h
+
+C_FILES =         \
+    compression.c \
+    endian.c      \
+    error.c       \
+    list.c        \
+    memory.c      \
+    nbt.c         \
+    region.c      \
+    tag.c
+
+libredstone_la_SOURCES = \
+    $(C_FILES)           \
+    $(H_FILES)
+
+pkginclude_HEADERS = $(H_FILES)

@@ -1,9 +1,25 @@
 # OSX noise
 .DS_Store
 
-# CMake generated stuff
-build/
-CMakeCache.txt
-CMakeFiles
+# autotools noise
 Makefile
-cmake_install.cmake
+Makefile.in
+.deps
+.libs
+/aclocal.m4
+/autom4te.cache/
+/config.guess
+/config.h
+/config.h.in
+/config.h.in~
+/config.log
+/config.status
+/config.sub
+/configure
+/depcomp
+/install-sh
+/libtool
+/ltmain.sh
+/m4/
+/missing
+/stamp-h1

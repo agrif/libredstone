@@ -1,0 +1,6 @@
+*.o
+/exmaple-trim
+/mapgen
+/mcrtool
+/nbttool
+/nbtwritetest
