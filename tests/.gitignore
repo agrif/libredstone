@@ -2,3 +2,4 @@
 *.lo
 /memory
 /error
+/endian
