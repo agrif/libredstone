@@ -41,6 +41,9 @@ typedef struct
 
 static int rs_test_main(const char* name, RSTest** tests, int argc, char** argv)
 {
+    /* make sure rs_critical calls fail */
+    rs_critical_is_fatal = true;
+    
     if (argc == 2)
     {
         if (!strcmp(argv[1], "name"))

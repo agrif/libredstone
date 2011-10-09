@@ -50,6 +50,8 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
  *
  * For a fatal version, see rs_error().
  *
+ * This can be made fatal by setting rs_critical_is_fatal to true.
+ *
  * \sa rs_error
  * \sa rs_return_if_fail, rs_return_val_if_fail
  * \sa rs_return_if_reached, rs_return_val_if_reached
@@ -68,6 +70,19 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
  * \sa rs_critical
  */
 #define rs_error(...) _rs_error_log(true, __FILE__, __LINE__, __func__, __VA_ARGS__)
+
+/**
+ * A flag that forces all printed errors to be fatal.
+ *
+ * Set this to true to cause all rs_critical() calls to be fatal, like
+ * rs_error(). This is good for unit testing (such as libredstone's
+ * own tests), or if you're really really paranoid.
+ *
+ * Defaults to false.
+ *
+ * \sa rs_critical()
+ */
+extern bool rs_critical_is_fatal;
 
 /**
  * A weaker rs_assert() for external bugs.

@@ -2,7 +2,7 @@
 # libredstone tests
 # =================
 
-check_PROGRAMS = memory
+check_PROGRAMS = memory error
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 LDADD = $(top_builddir)/src/libredstone.la
 

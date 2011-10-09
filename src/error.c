@@ -9,6 +9,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+bool rs_critical_is_fatal = false;
+
 void _rs_error_log(bool error, const char* filename, unsigned int line, const char* func, const char* str, ...)
 {
     va_list ap;
@@ -28,6 +30,6 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
     
     va_end(ap);
     
-    if (error)
+    if (error || rs_critical_is_fatal)
         exit(1);
 }
