@@ -110,6 +110,7 @@ src/Makefile
 tools/Makefile
 doc/Makefile
 doc/Doxyfile
+tests/Makefile
 ])
 
 AC_OUTPUT

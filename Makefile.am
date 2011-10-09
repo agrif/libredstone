@@ -1,6 +1,6 @@
 ACLOCAL_AMFLAGS = -I m4 $(ACLOCAL_FLAGS)
 
-SUBDIRS = src tools doc
+SUBDIRS = src tools doc tests
 
 doc_DATA = README COPYING
 
