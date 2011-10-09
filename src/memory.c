@@ -55,6 +55,9 @@ void* rs_realloc(void* ptr, size_t size)
 {
     void* ret = NULL;
     
+    if (ptr == NULL)
+        return rs_malloc(size);
+    
     if (memfuncs)
     {
         ret = memfuncs->realloc(memfuncs, ptr, size);

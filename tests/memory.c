@@ -91,7 +91,7 @@ RS_TEST(strdup_test, "rs_strdup")
 
 RS_TEST(strdup_null_test, "rs_strdup(NULL)")
 {
-    rs_assert(rs_strdup(NULL));
+    rs_assert(rs_strdup(NULL) == NULL);
 }
 
 static RSMemoryFunctions* active_funcs = NULL;

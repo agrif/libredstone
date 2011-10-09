@@ -189,7 +189,7 @@ void* rs_memdup(const void* ptr, size_t size);
  * \return the duplicated string
  * \sa rs_free, rs_memdup
  */
-#define rs_strdup(str) ((char*)rs_memdup((str), strlen(str) + 1))
+#define rs_strdup(str) (((str) == NULL) ? NULL : (char*)rs_memdup((str), strlen(str) + 1))
 
 /** @} */
 #endif /* __RS_MEMORY_H_INCLUDED__ */
