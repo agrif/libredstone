@@ -44,7 +44,10 @@ RSList* rs_list_nth_cell(RSList* first, unsigned int i)
     
     unsigned int current = 0;
     while (current < i && first->next)
+    {
         first = first->next;
+        current++;
+    }
     
     if (current == i)
         return first;
