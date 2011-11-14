@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import sys
+import os.path
 
 import ctypes
 import ctypes.util
@@ -8,10 +9,35 @@ from ctypes import c_int, c_uint, c_uint8, c_size_t, c_int64, c_uint32
 from ctypes import c_double, c_float
 from ctypes import c_void_p, c_char_p, c_bool
 
+# custom library finder
+def find_library(name):
+    path = ctypes.util.find_library(name)
+    if path:
+        return path
+    
+    # OSX will not find the dylib if it's installed in /usr/local
+    if sys.platform.startswith('darwin'):
+        if os.path.isfile('/usr/local/lib/lib%s.dylib' % (name,)):
+            return '/usr/local/lib/lib%s.dylib' % (name,)
+        
+        # fallback
+        return 'lib%s.dylib' % (name,)
+    
+    return None
+
 # create our library pointers
 # FIXME cross-platform loading
-rs = ctypes.CDLL("libredstone.dylib")
-c = ctypes.CDLL(ctypes.util.find_library("c"))
+try:
+    rs = ctypes.CDLL(find_library('redstone'))
+    rs.rs_malloc
+except AttributeError:
+    raise RuntimeError("could not find libredstone")
+
+try:
+    c = ctypes.CDLL(find_library('c'))
+    c.free
+except AttributeError:
+    raise RuntimeError("could not find standard C library")
 
 # some useful c functions
 c.fdopen.restype = c_void_p
