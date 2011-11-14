@@ -1,1 +1,3 @@
-EXTRA_DIST = redstone.py
+if ENABLE_PYTHON
+python_PYTHON = redstone.py
+endif ENABLE_PYTHON

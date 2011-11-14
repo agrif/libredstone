@@ -89,6 +89,31 @@ dnl =================
 AC_CHECK_HEADER(zlib.h, [], AC_MSG_ERROR([libredstone needs zlib installed to function]))
 AC_CHECK_LIB(z, inflateEnd, [LIBS="-lz $LIBS"], AC_MSG_ERROR([libredstone needs zlib installed to function]))
 
+dnl ======
+dnl Python
+dnl ======
+
+PYTHON_REQUIRED=2.6.0
+
+AC_ARG_ENABLE(python,
+			  AS_HELP_STRING([--enable-python], [Enable Python support]),
+			  [enable_python=$enableval],
+			  [enable_python=auto])
+
+if test "$enable_python" = "no"; then
+	found_python="no (disabled, use --enable-python to enable)"
+else
+	AM_PATH_PYTHON($PYTHON_REQUIRED,
+				   [found_python=yes],
+				   [found_python="no (python >= ${PYTHON_REQUIRED} not found"])	
+fi
+
+if test "$enable_python" = "yes" -a "$found_python" != "yes"; then
+	AC_MSG_ERROR([$found_python])
+fi
+
+AM_CONDITIONAL([ENABLE_PYTHON], [test "$found_python" = "yes"])
+
 dnl =======
 dnl Doxygen
 dnl =======
@@ -127,6 +152,10 @@ Configuration:
         Compiler               : $CC
         Installation prefix    : $prefix
         Build documentation    : $build_docs
+
+Language Bindings:
+
+        Python : $found_python
 
     The source is now prepared.
     Type \`make' to build libredstone.
