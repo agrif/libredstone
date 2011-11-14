@@ -108,6 +108,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 tools/Makefile
+bindings/Makefile
 doc/Makefile
 doc/Doxyfile
 ])
