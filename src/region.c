@@ -138,6 +138,9 @@ uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z)
     if (self->timestamps == NULL)
         return 0;
     
+    if (!rs_region_contains_chunk(self, x, z))
+        return 0;
+    
     return rs_endian_uint32(self->timestamps[x + 32*z]);
 }
 
@@ -156,6 +159,9 @@ static void* _rs_region_get_data(RSRegion* self, uint8_t x, uint8_t z)
 
 uint32_t rs_region_get_chunk_length(RSRegion* self, uint8_t x, uint8_t z)
 {
+    if (!rs_region_contains_chunk(self, x, z))
+        return 0;
+    
     uint32_t* size_int = (uint32_t*)_rs_region_get_data(self, x, z);
     if (!size_int)
         return 0;
@@ -166,6 +172,9 @@ uint32_t rs_region_get_chunk_length(RSRegion* self, uint8_t x, uint8_t z)
 
 RSCompressionType rs_region_get_chunk_compression(RSRegion* self, uint8_t x, uint8_t z)
 {
+    if (!rs_region_contains_chunk(self, x, z))
+        return RS_UNKNOWN_COMPRESSION;
+    
     uint8_t* compression_byte = (uint8_t*)_rs_region_get_data(self, x, z);
     if (!compression_byte)
         return RS_UNKNOWN_COMPRESSION;
@@ -187,12 +196,31 @@ RSCompressionType rs_region_get_chunk_compression(RSRegion* self, uint8_t x, uin
 /* valid until region is closed/flushed */
 void* rs_region_get_chunk_data(RSRegion* self, uint8_t x, uint8_t z)
 {
+    if (!rs_region_contains_chunk(self, x, z))
+        return NULL;
+    
     void* ret = _rs_region_get_data(self, x, z);
     if (!ret)
         return NULL;
     
     /* chunk data starts 5 bytes after */
     return ret + 5;
+}
+
+bool rs_region_contains_chunk(RSRegion* self, uint8_t x, uint8_t z)
+{
+    rs_return_val_if_fail(self, false);
+    rs_return_val_if_fail(x < 32 && z < 32, false);
+    
+    uint16_t i = z * 32 + x;
+    if (self->locations[i].offset == 0)
+        return false;
+    if (self->locations[i].sector_count == 0)
+        return false;
+    if (self->timestamps[i] == 0)
+        return false;
+    
+    return true;
 }
 
 void rs_region_set_chunk_data(RSRegion* self, uint8_t x, uint8_t z, void* data, uint32_t len, RSCompressionType enc)
@@ -232,12 +260,12 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
         self->cached_writes = rs_list_remove(self->cached_writes, cell);
     }
     
-    if (len > 0 && enc == RS_AUTO_COMPRESSION)
+    if (len > 0 && data != NULL && enc == RS_AUTO_COMPRESSION)
         enc = rs_get_compression_type(data, len);
     
     /* copy the data */
     void* data_copy = NULL;
-    if (len > 0)
+    if (len > 0 && data != NULL)
         data_copy = memcpy(rs_malloc(len), data, len);
     
     /* now, create a new write struct */

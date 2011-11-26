@@ -65,14 +65,12 @@ void rs_region_close(RSRegion* self);
  * Get the last modified time of a given chunk.
  *
  * This retrieves the modified time of the chunk at the coordinates
- * given. If the chunk does not exist, this is usually (but not
- * always) 0 -- it depends on how sane Minecraft was feeling when it
- * wrote the region file.
+ * given. If the chunk does not exist, this is 0.
  *
  * \param self the region file
  * \param x the x coordinate of the chunk
  * \param z the z coordinate of the chunk
- * \return the last modified time of the chunk in question
+ * \return the last modified time of the chunk in question, or 0
  */
 uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z);
 
@@ -88,7 +86,7 @@ uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z);
  * \param self the region file
  * \param x the x coordinate of the chunk
  * \param z the z coordinate of the chunk
- * \return the length of the data for the chunk in question
+ * \return the length of the data for the chunk in question, or 0
  * \sa rs_region_get_chunk_data
  */
 uint32_t rs_region_get_chunk_length(RSRegion* self, uint8_t x, uint8_t z);
@@ -113,14 +111,15 @@ RSCompressionType rs_region_get_chunk_compression(RSRegion* self, uint8_t x, uin
  *
  * This function returns a pointer to the chunk data at the given
  * coordinates. This pointer is valid until the region is closed, or
- * until rs_region_flush() is called.
+ * until rs_region_flush() is called. If the chunk does not exist,
+ * this is NULL.
  *
  * Use this in combination with rs_region_get_chunk_length().
  *
  * \param self the region file
  * \param x the x coordinate of the chunk
  * \param z the z coordinate of the chunk
- * \return the data stored for the given chunk
+ * \return the data stored for the given chunk, or NULL
  * \sa rs_region_get_chunk_length, rs_region_get_chunk_compression
  */
 void* rs_region_get_chunk_data(RSRegion* self, uint8_t x, uint8_t z);
@@ -136,7 +135,7 @@ void* rs_region_get_chunk_data(RSRegion* self, uint8_t x, uint8_t z);
  * \param z the z coordinate of the chunk
  * \return true if the region contains the given chunk, false otherwise
  */
-#define rs_region_contains_chunk(self, x, z) (rs_region_get_chunk_timestamp((self), (x), (z)) == 0 || (int32_t)rs_region_get_chunk_length((self), (x), (z)) <= 0 ? false : true)
+bool rs_region_contains_chunk(RSRegion* self, uint8_t x, uint8_t z);
 
 /**
  * Set the data for a given chunk.
