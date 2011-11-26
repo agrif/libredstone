@@ -16,9 +16,6 @@
  * data that comes out of these files; for that, see the other parts
  * of libredstone.
  *
- * Note that right now region writing only works for brand-new region
- * files. In-place region writing is planned but not yet implemented.
- *
  * @{
  */
 
