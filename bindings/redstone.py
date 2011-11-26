@@ -611,6 +611,7 @@ class Region(RedstoneObject):
         get_chunk_length = (c_uint32, [c_void_p, c_uint8, c_uint8])
         get_chunk_compression = (c_int, [c_void_p, c_uint8, c_uint8])
         get_chunk_data = (c_void_p, [c_void_p, c_uint8, c_uint8])
+        contains_chunk = (c_bool, [c_void_p, c_uint8, c_uint8])
         set_chunk_data = (None, [c_void_p, c_uint8, c_uint8, c_void_p, c_uint32, c_int])
         set_chunk_data_full = (None, [c_void_p, c_uint8, c_uint8, c_void_p, c_uint32, c_int, c_uint32])
         clear_chunk = (None, [c_void_p, c_uint8, c_uint8])
@@ -636,9 +637,7 @@ class Region(RedstoneObject):
         ptr = self._get_chunk_data(self, x, z)
         return ctypes.string_at(ptr, l)
     def contains_chunk(self, x, z):
-        if self.get_chunk_timestamp(x, z) == 0 or self.get_chunk_length(x, z) <= 0:
-            return False
-        return True
+        return self._contains_chunk(self, x, z)
     
     def set_chunk_data(self, x, z, data, enc, timestamp=None):
         inbuf = ctypes.create_string_buffer(data)
