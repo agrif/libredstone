@@ -133,6 +133,7 @@ AC_CONFIG_FILES([
 Makefile
 src/Makefile
 tools/Makefile
+tools/redstone/Makefile
 bindings/Makefile
 doc/Makefile
 doc/Doxyfile

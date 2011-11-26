@@ -2,11 +2,9 @@
 # tools using libredstone
 # =======================
 
-SUBDIRS = redstone
-
 INCLUDES = -I$(top_srcdir) -I$(top_srcdir)/src
 LDADD = $(top_builddir)/src/libredstone.la
 
-EXTRA_DIST = COPYING
+bin_PROGRAMS = redstone
 
-noinst_PROGRAMS = exmaple-trim mapgen mcrtool nbttool nbtwritetest setspawn setgamemode
+redstone_SOURCES = main.c
