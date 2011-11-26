@@ -40,6 +40,13 @@ struct ChunkWrite
     uint32_t timestamp;
 };
 
+/* for ordering chunk writes in in-place region writing */
+struct OrderedChunkWrite
+{
+    struct ChunkWrite* write;
+    uint32_t order;
+};
+
 /* overall region info */
 struct _RSRegion
 {
@@ -131,6 +138,9 @@ uint32_t rs_region_get_chunk_timestamp(RSRegion* self, uint8_t x, uint8_t z)
     if (self->timestamps == NULL)
         return 0;
     
+    if (!rs_region_contains_chunk(self, x, z))
+        return 0;
+    
     return rs_endian_uint32(self->timestamps[x + 32*z]);
 }
 
@@ -149,6 +159,9 @@ static void* _rs_region_get_data(RSRegion* self, uint8_t x, uint8_t z)
 
 uint32_t rs_region_get_chunk_length(RSRegion* self, uint8_t x, uint8_t z)
 {
+    if (!rs_region_contains_chunk(self, x, z))
+        return 0;
+    
     uint32_t* size_int = (uint32_t*)_rs_region_get_data(self, x, z);
     if (!size_int)
         return 0;
@@ -159,6 +172,9 @@ uint32_t rs_region_get_chunk_length(RSRegion* self, uint8_t x, uint8_t z)
 
 RSCompressionType rs_region_get_chunk_compression(RSRegion* self, uint8_t x, uint8_t z)
 {
+    if (!rs_region_contains_chunk(self, x, z))
+        return RS_UNKNOWN_COMPRESSION;
+    
     uint8_t* compression_byte = (uint8_t*)_rs_region_get_data(self, x, z);
     if (!compression_byte)
         return RS_UNKNOWN_COMPRESSION;
@@ -180,12 +196,31 @@ RSCompressionType rs_region_get_chunk_compression(RSRegion* self, uint8_t x, uin
 /* valid until region is closed/flushed */
 void* rs_region_get_chunk_data(RSRegion* self, uint8_t x, uint8_t z)
 {
+    if (!rs_region_contains_chunk(self, x, z))
+        return NULL;
+    
     void* ret = _rs_region_get_data(self, x, z);
     if (!ret)
         return NULL;
     
     /* chunk data starts 5 bytes after */
     return ret + 5;
+}
+
+bool rs_region_contains_chunk(RSRegion* self, uint8_t x, uint8_t z)
+{
+    rs_return_val_if_fail(self, false);
+    rs_return_val_if_fail(x < 32 && z < 32, false);
+    
+    uint16_t i = z * 32 + x;
+    if (self->locations[i].offset == 0)
+        return false;
+    if (self->locations[i].sector_count == 0)
+        return false;
+    if (self->timestamps[i] == 0)
+        return false;
+    
+    return true;
 }
 
 void rs_region_set_chunk_data(RSRegion* self, uint8_t x, uint8_t z, void* data, uint32_t len, RSCompressionType enc)
@@ -198,7 +233,11 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
 {
     rs_return_if_fail(self);
     rs_return_if_fail(x < 32 && z < 32);
-    rs_return_if_fail(self->write);
+    if (!(self->write))
+    {
+        rs_critical("region is not opened in write mode.");
+        return;
+    }
     
     /* first, check if there's a cached write already, and clear it if
      * needed
@@ -221,11 +260,13 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
         self->cached_writes = rs_list_remove(self->cached_writes, cell);
     }
     
-    if (enc == RS_AUTO_COMPRESSION)
+    if (len > 0 && data != NULL && enc == RS_AUTO_COMPRESSION)
         enc = rs_get_compression_type(data, len);
     
     /* copy the data */
-    void* data_copy = memcpy(rs_malloc(len), data, len);
+    void* data_copy = NULL;
+    if (len > 0 && data != NULL)
+        data_copy = memcpy(rs_malloc(len), data, len);
     
     /* now, create a new write struct */
     struct ChunkWrite* job = rs_new0(struct ChunkWrite, 1);
@@ -242,6 +283,21 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
 void rs_region_clear_chunk(RSRegion* self, uint8_t x, uint8_t z)
 {
     rs_region_set_chunk_data_full(self, x, z, NULL, 0, RS_UNKNOWN_COMPRESSION, 0);
+}
+
+/* helper to convert to/from file representation of encodings */
+inline uint8_t _rs_region_get_encoding(RSCompressionType enc)
+{
+    switch (enc)
+    {
+    case RS_GZIP:
+        return 1;
+    case RS_ZLIB:
+        return 2;
+    default:
+        rs_return_val_if_reached(0); /* unhandled compression type */
+    };
+    return 0;
 }
 
 /* writes are cached until this is called */
@@ -277,6 +333,7 @@ void rs_region_flush(RSRegion* self)
             /* add on 4096 * 2 to account for location/timestamp headers */
             final_size += 4096 * 2;
             
+            /* make sure final size is on sector boundary */
             rs_assert(final_size % 4096 == 0);
             
             /* resize the file, and remap */
@@ -324,16 +381,7 @@ void rs_region_flush(RSRegion* self)
                 self->timestamps[i] = rs_endian_uint32(write->timestamp);
                 
                 /* convert compression types */
-                uint8_t enc = 0;
-                switch (write->encoding)
-                {
-                case RS_GZIP:
-                    enc = 1; break;
-                case RS_ZLIB:
-                    enc = 2; break;
-                default:
-                    rs_return_if_reached(); /* unhandled compression type */
-                };
+                uint8_t enc = _rs_region_get_encoding(write->encoding);
                 
                 /* write the pre-data header (carefully) */
                 void* dest = _rs_region_get_data(self, write->x, write->z);
@@ -352,8 +400,301 @@ void rs_region_flush(RSRegion* self)
              * shuffle things around and update it
              */
             
-            /* for now, this is unsupported */
-            rs_return_if_reached();
+            RSList* cell;
+            uint32_t sectors_added = 0;
+            
+            void* read_head;
+            uint32_t read_head_sector;
+            void* write_head;
+            uint32_t write_head_sector;
+            
+            /* first, seperate cached_writes into shrinking chunks and
+             * growing chunks, sorted by offset, in order to
+             * efficiently rewrite the region in only two passes
+             */
+            
+            RSList* shrinks = NULL;
+            RSList* grows = NULL;
+            
+            for (cell = self->cached_writes; cell != NULL; cell = cell->next)
+            {
+                struct ChunkWrite* write = cell->data;
+                RSList** dest = NULL;
+                
+                bool exists = rs_region_contains_chunk(self, write->x, write->z);
+                if (write->data == NULL && !exists)
+                {
+                    /* clearing a non-existant chunk is a no-op */
+                    continue;
+                }
+                
+                if (write->data == NULL || (exists && write->length <= rs_region_get_chunk_length(self, write->x, write->z)))
+                {
+                    /* this write will shrink the file */
+                    dest = &shrinks;
+                } else {
+                    /* this write will grow the file */
+                    dest = &grows;
+                    sectors_added += (write->length + 4 + 1) / 4096;
+                    if ((write->length + 4 + 1) % 4096 > 0)
+                        sectors_added++;
+                    if (exists)
+                    {
+                        sectors_added -= self->locations[write->z * 32 + write->x].sector_count;
+                    }
+                }
+                
+                /* make sure we have a list to insert into */
+                rs_assert(dest != NULL);
+                
+                struct OrderedChunkWrite* ordered_write = rs_new(struct OrderedChunkWrite, 1);
+                ordered_write->write = write;
+                ordered_write->order = rs_endian_uint24(self->locations[write->z * 32 + write->x].offset);
+                if (!exists)
+                {
+                    /* so this chunk is being *added* not modified. We
+                     * want to add chunks at the very beginning of the
+                     * grow process (taking place at the *end* of the
+                     * file), so we need these to show up at the very
+                     * end of the list.
+                     */
+                    ordered_write->order = UINT32_MAX;
+                }
+                
+                while (true)
+                {
+                    if (*dest == NULL)
+                    {
+                        /* end of the line -- must insert it here */
+                        *dest = rs_list_push(*dest, ordered_write);
+                        break;
+                    } else {
+                        /* check to see if we should insert here */
+                        struct OrderedChunkWrite* other = (*dest)->data;
+                        if (ordered_write->order <= other->order)
+                        {
+                            /* make sure we don't have any duplicate writes */
+                            rs_assert(write->x != other->write->x || write->z != other->write->z);
+                            
+                            /* insert before this element! */
+                            *dest = rs_list_push(*dest, ordered_write);
+                            break;
+                        }
+                        
+                        dest = &((*dest)->next);
+                    }
+                }   
+            }
+            
+            /* save the old file size, write to new one */
+            uint32_t new_fsize = self->fsize;
+            
+            /* shrink the file */
+            if (shrinks)
+            {
+                /* skip ahead to the first interesting part */
+                struct OrderedChunkWrite* first = shrinks->data;
+                read_head = _rs_region_get_data(self, first->write->x, first->write->z);
+                read_head_sector = rs_endian_uint24(self->locations[first->write->z * 32 + first->write->x].offset);
+                write_head = read_head;
+                write_head_sector = read_head_sector;
+            }
+            for (cell = shrinks; cell != NULL; cell = cell->next)
+            {
+                struct OrderedChunkWrite* ordered_write = cell->data;
+                struct ChunkWrite* write = ordered_write->write;
+                
+                /* move the read head up to the start of this data */
+                void* data_start = _rs_region_get_data(self, write->x, write->z);
+                rs_assert(data_start >= read_head);
+                rs_assert((size_t)(data_start - read_head) % 4096 == 0);
+                rs_assert(read_head_sector >= write_head_sector);
+                uint32_t sectors_to_write = (data_start - read_head) / 4096;
+                
+                for (uint8_t z = 0; z < 32; z++)
+                {
+                    for (uint8_t x = 0; x < 32; x++)
+                    {
+                        uint32_t sector = rs_endian_uint24(self->locations[z * 32 + x].offset);
+                        if (sector >= read_head_sector && sector < read_head_sector + sectors_to_write)
+                        {
+                            /* we need to shift this location */
+                            uint32_t new_sector = sector - (read_head_sector - write_head_sector);
+                            rs_assert(new_sector <= sector);
+                            self->locations[z * 32 + x].offset = rs_endian_uint24(new_sector);
+                        }
+                    }
+                }
+                
+                memmove(write_head, read_head, data_start - read_head);
+                write_head += data_start - read_head;
+                write_head_sector += sectors_to_write;
+                read_head += data_start - read_head;
+                read_head_sector += sectors_to_write;
+                rs_assert(read_head == data_start);
+                
+                uint16_t i = write->z * 32 + write->x;
+                uint8_t old_size = self->locations[i].sector_count;
+                
+                if (write->data == NULL)
+                {
+                    /* deleting this chunk */
+                    self->locations[i].offset = 0;
+                    self->locations[i].sector_count = 0;
+                    self->timestamps[i] = 0;
+                } else {
+                    /* shrinking this chunk */
+                    
+                    /* calculate total size in sectors */
+                    uint8_t new_size = (write->length + 4 + 1) / 4096;
+                    if ((write->length + 4 + 1) % 4096 > 0)
+                        new_size++;
+                    
+                    self->locations[i].offset = rs_endian_uint24(write_head_sector);
+                    self->locations[i].sector_count = new_size;
+                    self->timestamps[i] = rs_endian_uint32(write->timestamp);
+                    
+                    /* convert compression types */
+                    uint8_t enc = _rs_region_get_encoding(write->encoding);
+                    
+                    /* write data carefully */
+                    ((uint32_t*)write_head)[0] = rs_endian_uint32(write->length + 1);
+                    ((uint8_t*)write_head)[4] = enc;
+                    memcpy(write_head + 4 + 1, write->data, write->length);
+                    
+                    write_head += new_size * 4096;
+                    new_fsize += new_size * 4096;
+                    write_head_sector += new_size;
+                }
+                
+                /* move the read head forward */
+                read_head += old_size * 4096;
+                new_fsize -= old_size * 4096;
+                read_head_sector += old_size;
+            }
+            rs_list_foreach(shrinks, rs_free);
+            rs_list_free(shrinks);
+            
+            /* resize the file to account for both shrinking and growing */
+            new_fsize += sectors_added * 4096;
+            rs_assert(new_fsize % 4096 == 0);
+            if (msync(self->map, self->fsize, MS_SYNC) < 0)
+            {
+                rs_error("sync failed"); /* FIXME */
+            }
+            munmap(self->map, self->fsize);
+            if (ftruncate(self->fd, new_fsize) < 0)
+            {
+                rs_error("file resize failed"); /* FIXME */
+            }
+            self->map = mmap(NULL, new_fsize, PROT_READ | PROT_WRITE, MAP_SHARED, self->fd, 0);
+            if (self->map == MAP_FAILED)
+            {
+                rs_error("remap failed"); /* FIXME */
+            }
+            self->fsize = new_fsize;
+            self->locations = (struct ChunkLocation*)(self->map);
+            self->timestamps = (uint32_t*)(self->map + 4096);
+            
+            /* grow the file (in reverse, so copying doesn't overwrite
+             * information we still need)
+             */
+            write_head = self->map + self->fsize;
+            write_head_sector = self->fsize / 4096;
+            read_head = write_head - (sectors_added * 4096);
+            read_head_sector = write_head_sector - sectors_added;
+            grows = rs_list_reverse(grows);
+            for (cell = grows; cell != NULL; cell = cell->next)
+            {
+                struct OrderedChunkWrite* ordered_write = cell->data;
+                struct ChunkWrite* write = ordered_write->write;
+                uint16_t i = write->z * 32 + write->x;
+                if (rs_region_contains_chunk(self, write->x, write->z))
+                {
+                    /* enlarging chunk */
+                    
+                    /* move read head to just past this chunk */
+                    void* data_end = _rs_region_get_data(self, write->x, write->z);
+                    data_end += self->locations[i].sector_count * 4096;
+                    
+                    rs_assert(data_end <= read_head);
+                    rs_assert((size_t)(read_head - data_end) % 4096 == 0);
+                    rs_assert(read_head_sector <= write_head_sector);
+                    uint32_t sectors_to_write = (read_head - data_end) / 4096;
+                    
+                    for (uint8_t z = 0; z < 32; z++)
+                    {
+                        for (uint8_t x = 0; x < 32; x++)
+                        {
+                            uint32_t sector = rs_endian_uint24(self->locations[z * 32 + x].offset);
+                            if (sector >= read_head_sector - sectors_to_write && sector < read_head_sector)
+                            {
+                                /* we need to shift this location */
+                                uint32_t new_sector = sector + (write_head_sector - read_head_sector);
+                                rs_assert(new_sector >= sector);
+                                self->locations[z * 32 + x].offset = rs_endian_uint24(new_sector);
+                            }
+                        }
+                    }
+                    
+                    write_head -= read_head - data_end;
+                    write_head_sector -= sectors_to_write;
+                    memmove(write_head, data_end, read_head - data_end);
+                    read_head -= read_head - data_end;
+                    read_head_sector -= sectors_to_write;
+                    rs_assert(read_head == data_end);
+                    
+                    /* write out the new, enlarged chunk */
+                    
+                    uint8_t old_sectors = self->locations[i].sector_count;
+                    uint8_t sectors = (write->length + 4 + 1) / 4096;
+                    if ((write->length + 4 + 1) % 4096 > 0)
+                        sectors++;
+                    
+                    write_head -= sectors * 4096;
+                    write_head_sector -= sectors;
+                    
+                    self->locations[i].offset = rs_endian_uint24(write_head_sector);
+                    self->locations[i].sector_count = sectors;
+                    self->timestamps[i] = rs_endian_uint32(write->timestamp);
+                    
+                    /* convert compression type */
+                    uint8_t enc = _rs_region_get_encoding(write->encoding);
+                    
+                    /* write data carefully */
+                    ((uint32_t*)write_head)[0] = rs_endian_uint32(write->length + 1);
+                    ((uint8_t*)write_head)[4] = enc;
+                    memcpy(write_head + 4 + 1, write->data, write->length);
+                    
+                    /* move read head past old chunk */
+                    read_head -= old_sectors * 4096;
+                    read_head_sector -= old_sectors;
+                } else {
+                    /* adding chunk */
+                    uint8_t sectors = (write->length + 4 + 1) / 4096;
+                    if ((write->length + 4 + 1) % 4096 > 0)
+                        sectors++;
+                    
+                    write_head -= sectors * 4096;
+                    write_head_sector -= sectors;
+                    
+                    self->locations[i].offset = rs_endian_uint24(write_head_sector);
+                    self->locations[i].sector_count = sectors;
+                    self->timestamps[i] = rs_endian_uint32(write->timestamp);
+                    
+                    /* convert compression type */
+                    uint8_t enc = _rs_region_get_encoding(write->encoding);
+                    
+                    /* write data carefully */
+                    ((uint32_t*)write_head)[0] = rs_endian_uint32(write->length + 1);
+                    ((uint8_t*)write_head)[4] = enc;
+                    memcpy(write_head + 4 + 1, write->data, write->length);
+                }
+            }
+            rs_list_foreach(grows, rs_free);
+            rs_list_free(grows);
+            
+            /* all done (*phew*) */
         }
     }
     
