@@ -198,7 +198,11 @@ void rs_region_set_chunk_data_full(RSRegion* self, uint8_t x, uint8_t z, void* d
 {
     rs_return_if_fail(self);
     rs_return_if_fail(x < 32 && z < 32);
-    rs_return_if_fail(self->write);
+    if (!(self->write))
+    {
+        rs_critical("region is not opened in write mode.");
+        return;
+    }
     
     /* first, check if there's a cached write already, and clear it if
      * needed
@@ -277,6 +281,7 @@ void rs_region_flush(RSRegion* self)
             /* add on 4096 * 2 to account for location/timestamp headers */
             final_size += 4096 * 2;
             
+            /* make sure final size is on sector boundary */
             rs_assert(final_size % 4096 == 0);
             
             /* resize the file, and remap */
