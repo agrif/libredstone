@@ -25,6 +25,7 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
     
     printf("%s:%i (%s) ", filename, line, func);
     vprintf(str, ap);
+    printf("\n");
     
     va_end(ap);
     
