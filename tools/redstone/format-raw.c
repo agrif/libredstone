@@ -15,40 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __RS_TOOL_OPTIONS_H_INCLUDED__
-#define __RS_TOOL_OPTIONS_H_INCLUDED__
-
-#include "redstone.h"
 #include "formats.h"
 
-typedef struct
+static void raw_dump(RSNBT* nbt, FILE* out)
 {
-    struct
-    {
-        enum
-        {
-            RS_STANDALONE,
-            RS_REGION,
-        } type;
-        union
-        {
-            const char* standalone;
-            struct
-            {
-                const char* path;
-                uint8_t x, z;
-                RSRegion* region;
-            } region;
-        };
-        RSNBT* nbt;
-    } source;
+    void* data;
+    size_t length;
+    rs_nbt_write(nbt, &data, &length, RS_GZIP);
     
-    enum
-    {
-        RS_EXTRACT,
-    } action;
+    fwrite(data, 1, length, out);
     
-    RSToolFormatter* formatter;
-} RSToolOptions;
+    rs_free(data);
+}
 
-#endif /* __RS_TOOL_OPTIONS_H_INCLUDED__ */
+RSToolFormatter rs_tool_formatter_raw = {
+    .name = "raw",
+    .description = "standalone, gzip'd raw NBT (like level.dat)",
+    .dump = raw_dump,
+};

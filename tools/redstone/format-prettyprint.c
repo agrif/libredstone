@@ -15,40 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __RS_TOOL_OPTIONS_H_INCLUDED__
-#define __RS_TOOL_OPTIONS_H_INCLUDED__
-
-#include "redstone.h"
 #include "formats.h"
 
-typedef struct
+static void prettyprint_dump(RSNBT* nbt, FILE* out)
 {
-    struct
-    {
-        enum
-        {
-            RS_STANDALONE,
-            RS_REGION,
-        } type;
-        union
-        {
-            const char* standalone;
-            struct
-            {
-                const char* path;
-                uint8_t x, z;
-                RSRegion* region;
-            } region;
-        };
-        RSNBT* nbt;
-    } source;
-    
-    enum
-    {
-        RS_EXTRACT,
-    } action;
-    
-    RSToolFormatter* formatter;
-} RSToolOptions;
+    rs_nbt_pretty_print(nbt, out);
+}
 
-#endif /* __RS_TOOL_OPTIONS_H_INCLUDED__ */
+RSToolFormatter rs_tool_formatter_prettyprint = {
+    .name = "prettyprint",
+    .description = "a pretty (but non-standard) representation",
+    .dump = prettyprint_dump,
+};

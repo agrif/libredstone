@@ -7,4 +7,6 @@ LDADD = $(top_builddir)/src/libredstone.la
 
 bin_PROGRAMS = redstone
 
-redstone_SOURCES = main.c options.h optparse.c optparse.h actions.h action-extract.c
+redstone_SOURCES = main.c options.h optparse.c optparse.h
+redstone_SOURCES += actions.h action-extract.c
+redstone_SOURCES += formats.h formats.c format-prettyprint.c format-raw.c

@@ -15,40 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __RS_TOOL_OPTIONS_H_INCLUDED__
-#define __RS_TOOL_OPTIONS_H_INCLUDED__
+#ifndef __RS_TOOL_FORMATS_H_INCLUDED__
+#define __RS_TOOL_FORMATS_H_INCLUDED__
 
 #include "redstone.h"
-#include "formats.h"
+#include <stdio.h>
 
 typedef struct
 {
-    struct
-    {
-        enum
-        {
-            RS_STANDALONE,
-            RS_REGION,
-        } type;
-        union
-        {
-            const char* standalone;
-            struct
-            {
-                const char* path;
-                uint8_t x, z;
-                RSRegion* region;
-            } region;
-        };
-        RSNBT* nbt;
-    } source;
-    
-    enum
-    {
-        RS_EXTRACT,
-    } action;
-    
-    RSToolFormatter* formatter;
-} RSToolOptions;
+    const char* name;
+    const char* description;
+    void (*dump)(RSNBT*, FILE*);
+} RSToolFormatter;
 
-#endif /* __RS_TOOL_OPTIONS_H_INCLUDED__ */
+extern RSToolFormatter* rs_tool_formatter[];
+
+const char** rs_tool_formatter_names(void);
+RSToolFormatter* rs_tool_get_formatter(const char* name);
+int rs_tool_list_formatters(char* val, void* data);
+
+#endif /* __RS_TOOL_FORMATS_H_INCLUDED__ */

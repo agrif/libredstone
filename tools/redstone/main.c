@@ -21,6 +21,7 @@
 #include "config.h"
 #include "options.h"
 #include "actions.h"
+#include "formats.h"
 #include "optparse.h"
 
 RSToolOptions* popts = NULL;
@@ -39,15 +40,22 @@ int main(int argc, char* argv[])
     };
     popts = &opts;
     
+    const char** formatters = rs_tool_formatter_names();
+    
     struct opt_spec option_list[] = {
         {opt_help, "h", "--help", OPT_NO_METAVAR, OPT_NO_HELP, OPT_NO_DATA},
         {opt_version, "v", "--version", OPT_NO_METAVAR, OPT_NO_HELP, PACKAGE " " LIBREDSTONE_VERSION},
         {opt_set_action, "e", "--extract", OPT_NO_METAVAR, "extract the given file (most useful for regions)", (void*)RS_EXTRACT},
+        {opt_store_choice, "f", "--format", "FORMAT", "use the given format for -e (see --list-formats)", formatters},
+        {rs_tool_list_formatters, OPT_NO_SF, "--list-formats", OPT_NO_METAVAR, "list the available formats", OPT_NO_DATA},
         {OPT_NO_ACTION}
     };
     
     opt_basename(argv[0], '/');
     int args = opt_parse("usage: %s [options] { level.dat | region.mcr x z }", option_list, argv);
+    
+    opts.formatter = rs_tool_get_formatter(formatters[0]);
+    rs_assert(opts.formatter);
     
     /* read in the source positional arguments */
     if (!(args == 1 || args == 3))
@@ -151,6 +159,8 @@ int main(int argc, char* argv[])
         rs_region_close(opts.source.region.region);
     }
     rs_nbt_free(opts.source.nbt);
+    
+    rs_free(formatters);
     
     return ret;
 }

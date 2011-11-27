@@ -22,7 +22,7 @@
 
 int rs_tool_extract(RSToolOptions* opts)
 {
-    rs_nbt_pretty_print(opts->source.nbt, stdout);
+    opts->formatter->dump(opts->source.nbt, stdout);
     return 0;
 }
 
