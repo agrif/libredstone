@@ -16,14 +16,21 @@
  */
 
 #include "formats.h"
+#include "config.h"
 #include <string.h>
 
 extern RSToolFormatter rs_tool_formatter_prettyprint;
 extern RSToolFormatter rs_tool_formatter_raw;
+#ifdef ENABLE_LIBXML
+extern RSToolFormatter rs_tool_formatter_xml;
+#endif
 
 RSToolFormatter* rs_tool_formatters[] = {
     &rs_tool_formatter_prettyprint,
     &rs_tool_formatter_raw,
+#ifdef ENABLE_LIBXML
+    &rs_tool_formatter_xml,
+#endif
     NULL
 };
 

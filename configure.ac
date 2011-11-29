@@ -72,6 +72,7 @@ fi
 
 AC_PROG_INSTALL
 AC_PROG_MKDIR_P
+PKG_PROG_PKG_CONFIG
 
 LT_PREREQ([2.2.6])
 LT_INIT
@@ -88,6 +89,26 @@ dnl =================
 
 AC_CHECK_HEADER(zlib.h, [], AC_MSG_ERROR([libredstone needs zlib installed to function]))
 AC_CHECK_LIB(z, inflateEnd, [LIBS="-lz $LIBS"], AC_MSG_ERROR([libredstone needs zlib installed to function]))
+
+dnl ==============================
+dnl Optional Redstone Tool Formats
+dnl ==============================
+
+AC_ARG_ENABLE(libxml,
+			  AS_HELP_STRING([--enable-libxml], [Enable XML format]),
+			  [enable_libxml=$enableval],
+			  [enable_libxml=auto])
+if test "$enable_libxml" = "no"; then
+    found_libxml="no (disabled, use --enable-libxml to enable)"
+else
+    PKG_CHECK_MODULES(libxml2, [libxml-2.0],
+                   [found_libxml=yes],
+                   [found_libxml="no (not found)"])
+fi
+if test "$found_libxml" = "yes"; then
+   AC_DEFINE(ENABLE_LIBXML, , [Enable XML format, via libxml2])
+fi
+AM_CONDITIONAL([ENABLE_LIBXML], [test "$found_libxml" = "yes"])
 
 dnl ======
 dnl Python
@@ -153,6 +174,10 @@ Configuration:
         Compiler               : $CC
         Installation prefix    : $prefix
         Build documentation    : $build_docs
+
+Redstone Tool Formats:
+
+        XML : $found_libxml
 
 Language Bindings:
 
