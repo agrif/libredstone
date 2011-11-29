@@ -121,7 +121,10 @@ static void xml_dump(RSNBT* nbt, FILE* out)
     writer = xmlNewTextWriterDoc(&doc, 0);
     rs_return_if_fail(writer);
     
-    rc = xmlTextWriterStartDocument(writer, NULL, "ISO-8859-1", NULL);
+    rc = xmlTextWriterStartDocument(writer, NULL, "UTF-8", NULL);
+    rs_return_if_fail(rc >= 0);
+    
+    rc = xmlTextWriterWriteDTD(writer, BAD_CAST "nbt", BAD_CAST "+//IDN libredstone.org//DTD XML-NBT//EN", BAD_CAST "http://libredstone.org/dtd/nbt.dtd", BAD_CAST "");
     rs_return_if_fail(rc >= 0);
     
     rc = xmlTextWriterStartElement(writer, BAD_CAST "nbt");

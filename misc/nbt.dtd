@@ -1,0 +1,22 @@
+<!ELEMENT nbt (byte | short | int | long | float | double | bytearray | string | list | compound)>
+<!ATTLIST nbt name CDATA #IMPLIED>
+<!ELEMENT byte (#PCDATA)>
+<!ATTLIST byte name CDATA #IMPLIED>
+<!ELEMENT short (#PCDATA)>
+<!ATTLIST short name CDATA #IMPLIED>
+<!ELEMENT int (#PCDATA)>
+<!ATTLIST int name CDATA #IMPLIED>
+<!ELEMENT long (#PCDATA)>
+<!ATTLIST long name CDATA #IMPLIED>
+<!ELEMENT float (#PCDATA)>
+<!ATTLIST float name CDATA #IMPLIED>
+<!ELEMENT double (#PCDATA)>
+<!ATTLIST double name CDATA #IMPLIED>
+<!ELEMENT bytearray (#PCDATA)>
+<!ATTLIST bytearray name CDATA #IMPLIED>
+<!ELEMENT string (#PCDATA)>
+<!ATTLIST string name CDATA #IMPLIED>
+<!ELEMENT list (byte* | short* | int* | long* | float* | double* | bytearray* | string* | list* | compound*)>
+<!ATTLIST list name CDATA #IMPLIED>
+<!ELEMENT compound (byte | short | int | long | float | double | bytearray | string | list | compound)*>
+<!ATTLIST compound name CDATA #IMPLIED>

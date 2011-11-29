@@ -156,6 +156,7 @@ src/Makefile
 tools/Makefile
 tools/redstone/Makefile
 bindings/Makefile
+misc/Makefile
 doc/Makefile
 doc/Doxyfile
 ])
