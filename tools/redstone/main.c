@@ -17,6 +17,7 @@
 
 #include "redstone.h"
 #include <stdio.h>
+#include <stdarg.h>
 
 #include "config.h"
 #include "options.h"
@@ -32,6 +33,16 @@ static int opt_set_action(char* val, void* data)
     popts->action = (size_t)data;
     return 0;
 }
+
+static void error(const char* fmt, ...)
+{
+    va_list arg;
+    va_start(arg, fmt);
+    fprintf(stderr, "%s: ", popts->argv[0]);
+    vfprintf(stderr, fmt, arg);
+    va_end(arg);
+}
+    
 
 int main(int argc, char* argv[])
 {
@@ -59,14 +70,18 @@ int main(int argc, char* argv[])
     opt_basename(argv[0], '/');
     int args = opt_parse("usage: %s [options] { level.dat | region.mcr x z }", option_list, argv);
     
+    opts.argv = argv;
+    opts.argc = argc;
+    opts.error = error;
+    
     opts.formatter = rs_tool_get_formatter(formatters[0]);
     rs_assert(opts.formatter);
     
     /* read in the source positional arguments */
     if (!(args == 1 || args == 3))
     {
-        fprintf(stderr, "%s: no valid file given\n", argv[0]);
-        fprintf(stderr, "%s: see --help for details\n", argv[0]);
+        error("no valid file given\n");
+        error("see --help for details\n");
         return 1;
     } else if (args == 1) {
         opts.source.type = RS_STANDALONE;
@@ -95,8 +110,8 @@ int main(int argc, char* argv[])
                     tmp = strtol(argv[i], &end, 10);
                     if (end[0] != 0 || tmp < 0 || tmp >= 32)
                     {
-                        fprintf(stderr, "%s: invalid integer for x: %s\n", argv[0], argv[i]);
-                        fprintf(stderr, "%s: see --help for details\n", argv[0]);
+                        error("invalid integer for x: %s\n", argv[i]);
+                        error("see --help for details\n");
                         return 1;
                     }
                     opts.source.region.x = tmp;
@@ -105,8 +120,8 @@ int main(int argc, char* argv[])
                     tmp = strtol(argv[i], &end, 10);
                     if (end[0] != 0 || tmp < 0 || tmp >= 32)
                     {
-                        fprintf(stderr, "%s: invalid integer for z: %s\n", argv[0], argv[i]);
-                        fprintf(stderr, "%s: see --help for details\n", argv[0]);
+                        error("invalid integer for z: %s\n", argv[i]);
+                        error("see --help for details\n");
                         return 1;
                     }
                     opts.source.region.z = tmp;
@@ -127,14 +142,14 @@ int main(int argc, char* argv[])
         opts.source.region.region = rs_region_open(opts.source.region.path, false);
         if (!opts.source.region.region)
         {
-            fprintf(stderr, "%s: could not open region: %s\n", argv[0], opts.source.region.path);
+            error("could not open region: %s\n", opts.source.region.path);
             return 1;
         }
         
         opts.source.nbt = rs_nbt_parse_from_region(opts.source.region.region, opts.source.region.x, opts.source.region.z);
         if (!opts.source.nbt)
         {
-            fprintf(stderr, "%s: could not open chunk (%i, %i) in region: %s\n", argv[0], opts.source.region.x, opts.source.region.z, opts.source.region.path);
+            error("could not open chunk (%i, %i) in region: %s\n", opts.source.region.x, opts.source.region.z, opts.source.region.path);
             return 1;
         }
         
@@ -143,7 +158,7 @@ int main(int argc, char* argv[])
         opts.source.nbt = rs_nbt_parse_from_file(opts.source.standalone);
         if (!opts.source.nbt)
         {
-            fprintf(stderr, "%s: could not open NBT file: %s\n", argv[0], opts.source.standalone);
+            error("could not open NBT file: %s\n", opts.source.standalone);
             return 1;
         }
         break;

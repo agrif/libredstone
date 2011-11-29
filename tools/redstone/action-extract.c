@@ -22,6 +22,11 @@
 
 int rs_tool_extract(RSToolOptions* opts)
 {
+    if (!(opts->formatter->dump))
+    {
+        opts->error("format `%s' does not support extraction\n", opts->formatter->name);
+        return 1;
+    }
     opts->formatter->dump(opts->source.nbt, stdout);
     return 0;
 }

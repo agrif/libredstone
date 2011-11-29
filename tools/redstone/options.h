@@ -23,6 +23,9 @@
 
 typedef struct
 {
+    char** argv;
+    int argc;
+    
     struct
     {
         enum
@@ -48,6 +51,7 @@ typedef struct
         RS_EXTRACT,
     } action;
     
+    void (*error)(const char* fmt, ...);
     RSToolFormatter* formatter;
 } RSToolOptions;
 
