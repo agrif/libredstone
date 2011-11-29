@@ -110,7 +110,7 @@ static void xml_dump_tag(RSTag* tag, xmlTextWriterPtr writer, const char* name)
     rs_return_if_fail(rc >= 0);
 }
 
-static void xml_dump(RSNBT* nbt, FILE* out)
+static void xml_dump(RSToolOptions* opts, RSNBT* nbt, FILE* out)
 {
     LIBXML_TEST_VERSION;
     

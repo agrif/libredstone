@@ -15,25 +15,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef __RS_TOOL_FORMATS_H_INCLUDED__
-#define __RS_TOOL_FORMATS_H_INCLUDED__
-
 #include "redstone.h"
-#include "options.h"
 #include <stdio.h>
 
-struct _RSToolFormatter
+#include "options.h"
+#include "formats.h"
+
+int rs_tool_replace(RSToolOptions* opts)
 {
-    const char* name;
-    const char* description;
-    void (*dump)(RSToolOptions*, RSNBT*, FILE*);
-    RSNBT* (*load)(RSToolOptions*, FILE*);
-};
+    if (!(opts->formatter->load))
+    {
+        opts->error("format `%s' does not support replacement\n", opts->formatter->name);
+        return 1;
+    }
+    
+    RSNBT* nbt = opts->formatter->load(opts, stdin);
+    /* presumably the formatter will print an error if needed... */
+    if (!nbt)
+        return 1;
+    
+    /* do something */
+    
+    rs_nbt_free(nbt);
+    
+    return 0;
+}
 
-extern RSToolFormatter* rs_tool_formatter[];
-
-const char** rs_tool_formatter_names(void);
-RSToolFormatter* rs_tool_get_formatter(const char* name);
-int rs_tool_list_formatters(char* val, void* data);
-
-#endif /* __RS_TOOL_FORMATS_H_INCLUDED__ */

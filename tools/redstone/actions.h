@@ -21,5 +21,6 @@
 #include "options.h"
 
 int rs_tool_extract(RSToolOptions* opts);
+int rs_tool_replace(RSToolOptions* opts);
 
 #endif /* __RS_TOOL_ACTIONS_H_INCLUDED__ */

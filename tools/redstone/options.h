@@ -19,7 +19,9 @@
 #define __RS_TOOL_OPTIONS_H_INCLUDED__
 
 #include "redstone.h"
-#include "formats.h"
+
+/* forward declaration to break a dependency loop */
+typedef struct _RSToolFormatter RSToolFormatter;
 
 typedef struct
 {
@@ -49,6 +51,7 @@ typedef struct
     enum
     {
         RS_EXTRACT,
+        RS_REPLACE,
     } action;
     
     void (*error)(const char* fmt, ...);

@@ -59,9 +59,10 @@ int main(int argc, char* argv[])
         {opt_text, OPT_NO_SF, OPT_NO_LF, OPT_NO_METAVAR, " ", OPT_NO_DATA},
         
         {opt_text, OPT_NO_SF, OPT_NO_LF, OPT_NO_METAVAR, "\nActions:", OPT_NO_DATA},
-        {opt_set_action, "e", "--extract", OPT_NO_METAVAR, "extract the given file (most useful for regions)", (void*)RS_EXTRACT},
+        {opt_set_action, "e", "--extract", OPT_NO_METAVAR, "extract the given file to stdout (most useful for regions)", (void*)RS_EXTRACT},
+        {opt_set_action, "r", "--replace", OPT_NO_METAVAR, "replace the given file with stdin (most useful for regions)", (void*)RS_REPLACE},
         
-        {opt_text, OPT_NO_SF, OPT_NO_LF, OPT_NO_METAVAR, "\nOptions for extract:", OPT_NO_DATA},
+        {opt_text, OPT_NO_SF, OPT_NO_LF, OPT_NO_METAVAR, "\nOptions for extract, replace:", OPT_NO_DATA},
         {opt_store_choice, "f", "--format", "FORMAT", "use the given format for input/output", formatters},
         {rs_tool_list_formatters, OPT_NO_SF, "--list-formats", OPT_NO_METAVAR, "list the available formats", OPT_NO_DATA},
         {OPT_NO_ACTION}
@@ -170,6 +171,9 @@ int main(int argc, char* argv[])
     {
     case RS_EXTRACT:
         ret = rs_tool_extract(&opts);
+        break;
+    case RS_REPLACE:
+        ret = rs_tool_replace(&opts);
         break;
     };
     

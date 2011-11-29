@@ -19,6 +19,7 @@
 #include <stdio.h>
 
 #include "options.h"
+#include "formats.h"
 
 int rs_tool_extract(RSToolOptions* opts)
 {
@@ -27,7 +28,7 @@ int rs_tool_extract(RSToolOptions* opts)
         opts->error("format `%s' does not support extraction\n", opts->formatter->name);
         return 1;
     }
-    opts->formatter->dump(opts->source.nbt, stdout);
+    opts->formatter->dump(opts, opts->source.nbt, stdout);
     return 0;
 }
 

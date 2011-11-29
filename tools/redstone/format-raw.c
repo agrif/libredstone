@@ -17,7 +17,7 @@
 
 #include "formats.h"
 
-static void raw_dump(RSNBT* nbt, FILE* out)
+static void raw_dump(RSToolOptions* opts, RSNBT* nbt, FILE* out)
 {
     void* data;
     size_t length;

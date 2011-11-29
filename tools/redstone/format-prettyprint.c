@@ -17,7 +17,7 @@
 
 #include "formats.h"
 
-static void prettyprint_dump(RSNBT* nbt, FILE* out)
+static void prettyprint_dump(RSToolOptions* opts, RSNBT* nbt, FILE* out)
 {
     rs_nbt_pretty_print(nbt, out);
 }
