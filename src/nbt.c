@@ -74,13 +74,16 @@ RSNBT* rs_nbt_parse_from_region(RSRegion* region, uint8_t x, uint8_t z)
 {
     rs_return_val_if_fail(region, NULL);
     
+    if (!rs_region_contains_chunk(region, x, z))
+        return NULL;
+    
     void* data = rs_region_get_chunk_data(region, x, z);
     uint32_t  len = rs_region_get_chunk_length(region, x, z);
     RSCompressionType enc = rs_region_get_chunk_compression(region, x, z);
     
-    if (!data || len == 0)
-        return NULL;
-    
+    /* chunk must exist */
+    rs_assert(data && len > 0);
+
     return rs_nbt_parse(data, len, enc);
 }
 

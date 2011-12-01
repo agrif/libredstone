@@ -212,6 +212,10 @@ bool rs_region_contains_chunk(RSRegion* self, uint8_t x, uint8_t z)
     rs_return_val_if_fail(self, false);
     rs_return_val_if_fail(x < 32 && z < 32, false);
     
+    /* short-circuit if the file is empty */
+    if (self->map == NULL)
+        return false;
+    
     uint16_t i = z * 32 + x;
     if (self->locations[i].offset == 0)
         return false;
