@@ -290,7 +290,7 @@ void rs_region_clear_chunk(RSRegion* self, uint8_t x, uint8_t z)
 }
 
 /* helper to convert to/from file representation of encodings */
-inline uint8_t _rs_region_get_encoding(RSCompressionType enc)
+static inline uint8_t _rs_region_get_encoding(RSCompressionType enc)
 {
     switch (enc)
     {
