@@ -32,4 +32,5 @@ RSToolFormatter rs_tool_formatter_raw = {
     .name = "raw",
     .description = "standalone, gzip'd raw NBT (like level.dat)",
     .dump = raw_dump,
+    .load = NULL,
 };

@@ -42,7 +42,31 @@ static void error(const char* fmt, ...)
     vfprintf(stderr, fmt, arg);
     va_end(arg);
 }
-    
+
+bool standalone_save_nbt(RSNBT* newnbt)
+{
+    rs_assert(popts->source.type == RS_STANDALONE);
+    rs_assert(newnbt);
+    if(!rs_nbt_write_to_file(newnbt, popts->source.standalone))
+    {
+        popts->error("could not write to file `%s'\n", popts->source.standalone);
+        return false;
+    }
+    return true;
+}
+
+bool region_save_nbt(RSNBT* newnbt)
+{
+    rs_assert(popts->source.type == RS_REGION);
+    rs_assert(newnbt);
+    if (!rs_nbt_write_to_region(newnbt, popts->source.region.region, popts->source.region.x, popts->source.region.z))
+    {
+        popts->error("could not write to chunk (%i, %i) in region `%s'\n", popts->source.region.x, popts->source.region.z, popts->source.region.path);
+        return false;
+    }
+    rs_region_flush(popts->source.region.region);
+    return true;
+}
 
 int main(int argc, char* argv[])
 {
@@ -86,6 +110,7 @@ int main(int argc, char* argv[])
         return 1;
     } else if (args == 1) {
         opts.source.type = RS_STANDALONE;
+        opts.save_nbt = standalone_save_nbt;
         for (int i = 1; i < argc; i++)
         {
             if (argv[i][0] != 0)
@@ -96,6 +121,7 @@ int main(int argc, char* argv[])
         }
     } else if (args == 3) {
         opts.source.type = RS_REGION;
+        opts.save_nbt = region_save_nbt;
         for (int i = 1; i < argc; i++)
         {
             if (argv[i][0] != 0)
@@ -137,10 +163,13 @@ int main(int argc, char* argv[])
     }
     
     /* open the source */
+    bool write = false;
+    if (opts.action == RS_REPLACE)
+        write = true;
     switch (opts.source.type)
     {
     case RS_REGION:
-        opts.source.region.region = rs_region_open(opts.source.region.path, false);
+        opts.source.region.region = rs_region_open(opts.source.region.path, write);
         if (!opts.source.region.region)
         {
             error("could not open region: %s\n", opts.source.region.path);
@@ -148,7 +177,7 @@ int main(int argc, char* argv[])
         }
         
         opts.source.nbt = rs_nbt_parse_from_region(opts.source.region.region, opts.source.region.x, opts.source.region.z);
-        if (!opts.source.nbt)
+        if (!write && !opts.source.nbt)
         {
             error("could not open chunk (%i, %i) in region: %s\n", opts.source.region.x, opts.source.region.z, opts.source.region.path);
             return 1;
@@ -157,7 +186,7 @@ int main(int argc, char* argv[])
         break;
     case RS_STANDALONE:
         opts.source.nbt = rs_nbt_parse_from_file(opts.source.standalone);
-        if (!opts.source.nbt)
+        if (!write && !opts.source.nbt)
         {
             error("could not open NBT file: %s\n", opts.source.standalone);
             return 1;
@@ -182,7 +211,8 @@ int main(int argc, char* argv[])
     {
         rs_region_close(opts.source.region.region);
     }
-    rs_nbt_free(opts.source.nbt);
+    if (opts.source.nbt)
+        rs_nbt_free(opts.source.nbt);
     
     rs_free(formatters);
     

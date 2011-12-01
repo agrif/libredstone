@@ -153,4 +153,5 @@ RSToolFormatter rs_tool_formatter_xml = {
     .name = "xml",
     .description = "an xml representation of NBT",
     .dump = xml_dump,
+    .load = NULL,
 };

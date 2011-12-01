@@ -26,4 +26,5 @@ RSToolFormatter rs_tool_formatter_prettyprint = {
     .name = "prettyprint",
     .description = "a pretty (but non-standard) representation",
     .dump = prettyprint_dump,
+    .load = NULL,
 };

@@ -28,6 +28,14 @@ typedef struct
     char** argv;
     int argc;
     
+    enum
+    {
+        RS_EXTRACT,
+        RS_REPLACE,
+    } action;
+    
+    void (*error)(const char* fmt, ...);
+    
     struct
     {
         enum
@@ -47,14 +55,8 @@ typedef struct
         };
         RSNBT* nbt;
     } source;
+    bool (*save_nbt)(RSNBT* newnbt);
     
-    enum
-    {
-        RS_EXTRACT,
-        RS_REPLACE,
-    } action;
-    
-    void (*error)(const char* fmt, ...);
     RSToolFormatter* formatter;
 } RSToolOptions;
 

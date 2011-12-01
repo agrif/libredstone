@@ -34,10 +34,11 @@ int rs_tool_replace(RSToolOptions* opts)
     if (!nbt)
         return 1;
     
-    /* do something */
-    
+    bool success = opts->save_nbt(nbt);
     rs_nbt_free(nbt);
     
+    if (!success)
+        return 1;
     return 0;
 }
 
