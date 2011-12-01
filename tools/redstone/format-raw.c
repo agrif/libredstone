@@ -28,9 +28,41 @@ static void raw_dump(RSToolOptions* opts, RSNBT* nbt, FILE* out)
     rs_free(data);
 }
 
+static RSNBT* raw_load(RSToolOptions* opts, FILE* in)
+{
+    void* buffer = NULL;
+    size_t buf_size = 1024 * 32;
+    size_t buf_used = 0;
+    buffer = rs_malloc(buf_size);
+    
+    while(true)
+    {
+        rs_assert(buf_used < buf_size);
+        buf_used += fread(buffer, 1, buf_size - buf_used, in);
+        if (buf_used != buf_size)
+        {
+            /* we're done! */
+            break;
+        }
+        
+        /* still more to read */
+        buf_size *= 2;
+        buffer = rs_realloc(buffer, buf_size);
+    }
+
+    RSNBT* nbt = rs_nbt_parse(buffer, buf_used, RS_AUTO_COMPRESSION);
+    
+    /* free the buffer */
+    rs_free(buffer);
+    
+    if (!nbt)
+        opts->error("could not parse raw NBT input\n");
+    return nbt;
+}
+
 RSToolFormatter rs_tool_formatter_raw = {
     .name = "raw",
     .description = "standalone, gzip'd raw NBT (like level.dat)",
     .dump = raw_dump,
-    .load = NULL,
+    .load = raw_load,
 };
