@@ -9,6 +9,10 @@ from ctypes import c_int, c_uint, c_uint8, c_size_t, c_int64, c_uint32
 from ctypes import c_double, c_float
 from ctypes import c_void_p, c_char_p, c_bool
 
+# py3k compatibility
+if sys.version_info[0] == 3:
+    long = int
+
 # custom library finder
 def find_library(name):
     path = ctypes.util.find_library(name)
@@ -50,7 +54,11 @@ class CFile(object):
     """This class wraps a python file object so that it can be passed
     in to C functions that require a FILE *."""
     def __init__(self, f):
-        self._as_parameter_ = c.fdopen(f.fileno(), f.mode)
+        try:
+            mode = f.mode.encode()
+        except AttributeError:
+            mode = f.mode
+        self._as_parameter_ = c.fdopen(f.fileno(), mode)
     #def __del__(self):
         #if not c is None:
         #    c.fclose(self._as_parameter_)
@@ -142,13 +150,15 @@ class RedstoneMetaclass(type):
             setattr(obj, propname, property(get_prop, set_prop))
         return obj
 
-class RedstoneObject(object):
+# python3 handles metaclasses differently, so this hack is needed
+RedstoneMetaclassObject = RedstoneMetaclass('RedstoneMetaclassObject', (object,), {})
+
+class RedstoneObject(RedstoneMetaclassObject):
     """This is a superclass for all simple libredstone objects. It
     stores the pointer provided so that you may pass instances of this
     class directly to ctypes-bound functions. It automatically calls
     the function named in _destructor_ when the object is freed;
     this defaults to self._free."""
-    __metaclass__ = RedstoneMetaclass
     _destructor_ = '_free'
     def __init__(self, ptr):
         self._as_parameter_ = ptr
@@ -172,14 +182,13 @@ class RedstoneObject(object):
     def __nonzero__(self):
         return bool(self._as_parameter_)
 
-class RedstoneCountedObject(object):
+class RedstoneCountedObject(RedstoneMetaclassObject):
     """This is a superclass for all reference-counted libredstone
     objects. It behaves like RedstoneObject, except it will ref an
     object on creation if an extra init parameter is passed as
     True. The functions named in _managers_ will be called for ref
     and unref; this defaults to _managers_ = ('_ref', '_unref'),
     calling self._ref and self._unref."""
-    __metaclass__ = RedstoneMetaclass
     _managers_ = ('_ref', '_unref')
     def __init__(self, ptr, unowned=False):
         self._as_parameter_ = ptr
@@ -230,6 +239,10 @@ rs.rs_get_compression_type.restype = c_int
 rs.rs_get_compression_type.argtypes = [c_void_p, c_size_t]
 
 def _compress_helper(func, err, enc, indata):
+    try:
+        indata = indata.encode()
+    except AttributeError:
+        pass
     inbuf = ctypes.create_string_buffer(indata)
     outptr = c_void_p(0)
     outlen = c_size_t(0)
@@ -248,6 +261,10 @@ def decompress(enc, gzdata):
     return _compress_helper(rs.rs_decompress, "could not decompress string", enc, gzdata)
 
 def get_compression_type(data):
+    try:
+        data = data.encode()
+    except AttributeError:
+        pass
     inbuf = ctypes.create_string_buffer(data)
     return rs.rs_get_compression_type(inbuf, ctypes.sizeof(inbuf))
 
@@ -330,6 +347,10 @@ class Tag(RedstoneCountedObject):
     type = property(get_type)
     
     def find(self, name):
+        try:
+            name = name.encode()
+        except AttributeError:
+            pass
         ptr = self._find(self, name)
         if not ptr:
             raise RuntimeError("could not find tag: %s" % (name,))
@@ -358,6 +379,10 @@ class Tag(RedstoneCountedObject):
     def set_byte_array(self, value):
         if not self.get_type() == TAG_BYTE_ARRAY:
             raise TypeError("Tag is not a byte array")
+        try:
+            value = value.encode()
+        except AttributeError:
+            pass
         inbuf = ctypes.create_string_buffer(value)
         self._set_byte_array(self, ctypes.sizeof(inbuf), inbuf)
     byte_array = property(get_byte_array, set_byte_array)
@@ -411,6 +436,10 @@ class Tag(RedstoneCountedObject):
     def compound_get(self, key):
         if not self.get_type() == TAG_COMPOUND:
             raise TypeError("Tag is not a compound object")
+        try:
+            key = key.encode()
+        except AttributeError:
+            pass
         ptr = self._compound_get(self, key)
         if not ptr:
             raise KeyError(key)
@@ -420,10 +449,18 @@ class Tag(RedstoneCountedObject):
             raise TypeError("Tag is not a compound object")
         if not isinstance(value, Tag):
             raise TypeError("value is not a Tag")
+        try:
+            key = key.encode()
+        except AttributeError:
+            pass
         self._compound_set(self, key, value)
     def compound_delete(self, key):
         if not self.get_type() == TAG_COMPOUND:
             raise TypeError("Tag is not a compound object")
+        try:
+            key = key.encode()
+        except AttributeError:
+            pass
         self._compound_delete(self, key)
     
     # list / compound / array pythonic conveniences
@@ -621,6 +658,10 @@ class Region(RedstoneObject):
     
     @classmethod
     def open(cls, path, write=False):
+        try:
+            path = path.encode()
+        except AttributeError:
+            pass
         ptr = cls._open(path, bool(write))
         if not ptr:
             raise RuntimeError("could not read region file: %s" % (path,))
@@ -640,6 +681,10 @@ class Region(RedstoneObject):
         return self._contains_chunk(self, x, z)
     
     def set_chunk_data(self, x, z, data, enc, timestamp=None):
+        try:
+            data = data.encode()
+        except AttributeError:
+            pass
         inbuf = ctypes.create_string_buffer(data)
         if timestamp:
             self._set_chunk_data_full(self, x, z, data, ctypes.sizeof(data), enc, timestamp)
@@ -676,6 +721,10 @@ class NBT(RedstoneObject):
     
     @classmethod
     def parse(cls, data, enc=AUTO_COMPRESSION):
+        try:
+            data = data.encode()
+        except AttributeError:
+            pass
         inbuf = ctypes.create_string_buffer(data)
         ptr = cls._parse(inbuf, ctypes.sizeof(inbuf), enc)
         if not ptr:
@@ -693,6 +742,10 @@ class NBT(RedstoneObject):
     
     @classmethod
     def parse_from_file(cls, fname):
+        try:
+            fname = fname.encode()
+        except AttributeError:
+            pass
         ptr = cls._parse_from_file(fname)
         if not ptr:
             raise RuntimeError("could not read NBT file: %s" % (fname,))
@@ -717,6 +770,10 @@ class NBT(RedstoneObject):
             raise RuntimeError("could not write NBT to region")
     
     def write_to_file(self, out):
+        try:
+            out = out.encode()
+        except AttributeError:
+            pass
         success = self._write_to_file(self, out)
         if not success:
             raise RuntimeError("could not write NBT to file: %s" % (out,))
