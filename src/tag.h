@@ -37,6 +37,9 @@ typedef enum
     RS_TAG_STRING = 8,
     RS_TAG_LIST = 9,
     RS_TAG_COMPOUND = 10,
+    RS_TAG_INT_ARRAY = 11,
+    
+    RS_INVALID_TAG,
 } RSTagType;
 
 RSTag* rs_tag_new0(RSTagType type);
@@ -45,12 +48,12 @@ RSTagType rs_tag_get_type(RSTag* self);
 /* fancy-pants tag creator that can set values for you. The form these
  * calls must take is different depending on the type, so see below...
  *
- * integer types: rs_tag_new(RS_TAG_INT, 103301);
- * float types:   rs_tag_new(RS_TAG_DOUBLE, 1.337);
- * byte arrays:   rs_tag_new(RS_TAG_BYTE_ARRAY, length, data_pointer);
- * strings:       rs_tag_new(RS_TAG_STRING, "Hello, world!");
- * lists:         rs_tag_new(RS_TAG_LIST, tag1, tag2, tag3, NULL);
- * compounds:     rs_tag_new(RS_TAG_COMPOUND, "key1", tag1, "key2", tag2, NULL);
+ * integer types:   rs_tag_new(RS_TAG_INT, 103301);
+ * float types:     rs_tag_new(RS_TAG_DOUBLE, 1.337);
+ * byte/int arrays: rs_tag_new(RS_TAG_BYTE_ARRAY, length, data_pointer);
+ * strings:         rs_tag_new(RS_TAG_STRING, "Hello, world!");
+ * lists:           rs_tag_new(RS_TAG_LIST, tag1, tag2, tag3, NULL);
+ * compounds:       rs_tag_new(RS_TAG_COMPOUND, "key1", tag1, "key2", tag2, NULL);
  */
 RSTag* rs_tag_newv(RSTagType type, va_list ap);
 RSTag* rs_tag_new(RSTagType type, ...);
@@ -82,6 +85,11 @@ void rs_tag_set_float(RSTag* self, double val);
 uint8_t* rs_tag_get_byte_array(RSTag* self);
 uint32_t rs_tag_get_byte_array_length(RSTag* self);
 void rs_tag_set_byte_array(RSTag* self, uint32_t len, uint8_t* data);
+
+/* for int arrays */
+uint32_t* rs_tag_get_int_array(RSTag* self);
+uint32_t rs_tag_get_int_array_length(RSTag* self);
+void rs_tag_set_int_array(RSTag* self, uint32_t len, uint32_t* data);
 
 /* for strings */
 const char* rs_tag_get_string(RSTag* self);

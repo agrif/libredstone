@@ -36,6 +36,11 @@ struct _RSTag
             uint32_t size;
             uint8_t* data;
         } byte_array;
+        struct
+        {
+            uint32_t size;
+            uint32_t* data;
+        } int_array;
         char* string;
         struct
         {
@@ -49,6 +54,7 @@ struct _RSTag
 RSTag* rs_tag_new0(RSTagType type)
 {
     rs_return_val_if_fail(type != RS_TAG_END, NULL);
+    rs_return_val_if_fail(type < RS_INVALID_TAG, NULL);
     
     RSTag* self = rs_new0(RSTag, 1);
     self->refcount = 0; /* floating reference */
@@ -101,6 +107,11 @@ RSTag* rs_tag_newv(RSTagType type, va_list ap)
         data = va_arg(ap, void*);
         rs_tag_set_byte_array(self, len, data);
         break;
+    case RS_TAG_INT_ARRAY:
+        len = va_arg(ap, int);
+        data = va_arg(ap, void*);
+        rs_tag_set_int_array(self, len, data);
+        break;
     case RS_TAG_STRING:
         rs_tag_set_string(self, va_arg(ap, char*));
         break;
@@ -145,6 +156,9 @@ static void _rs_tag_free(RSTag* self)
     {
     case RS_TAG_BYTE_ARRAY:
         rs_free(self->byte_array.data);
+        break;
+    case RS_TAG_INT_ARRAY:
+        rs_free(self->int_array.data);
         break;
     case RS_TAG_STRING:
         rs_free(self->string);
@@ -212,6 +226,7 @@ RSTag* rs_tag_find(RSTag* self, const char* name)
     case RS_TAG_FLOAT:
     case RS_TAG_DOUBLE:
     case RS_TAG_BYTE_ARRAY:
+    case RS_TAG_INT_ARRAY:
     case RS_TAG_STRING:
         /* leaf nodes, no children */
         return NULL;
@@ -277,6 +292,11 @@ void rs_tag_print(RSTag* self, FILE* dest)
         if (length != fwrite(rs_tag_get_byte_array(self), 1, length, dest))
             rs_critical("could not write entire byte array");
         break;
+    case RS_TAG_INT_ARRAY:
+        length = rs_tag_get_int_array_length(self);
+        if (length != fwrite(rs_tag_get_int_array(self), sizeof(uint32_t), length, dest))
+            rs_critical("could not write entire int array");
+        break;
     case RS_TAG_STRING:
         fprintf(dest, "%s", rs_tag_get_string(self));
         break;
@@ -340,9 +360,12 @@ static inline const char* rs_tag_get_type_name(RSTagType type)
     case RS_TAG_FLOAT: return "TAG_Float";
     case RS_TAG_DOUBLE: return "TAG_Double";
     case RS_TAG_BYTE_ARRAY: return "TAG_Byte_Array";
+    case RS_TAG_INT_ARRAY: return "TAG_Int_Array";
     case RS_TAG_STRING: return "TAG_String";
     case RS_TAG_LIST: return "TAG_List";
     case RS_TAG_COMPOUND: return "TAG_Compound";
+    default:
+        break;
     }
     
     return "TAG_Unknown";
@@ -391,6 +414,9 @@ static void rs_tag_print_inner(FILE* dest, RSTag* tag, const char* name, unsigne
         break;
     case RS_TAG_BYTE_ARRAY:
         fprintf(dest, "%u bytes\n", rs_tag_get_byte_array_length(tag));
+        break;
+    case RS_TAG_INT_ARRAY:
+        fprintf(dest, "%u bytes\n", rs_tag_get_int_array_length(tag));
         break;
     case RS_TAG_STRING:
         fprintf(dest, "%s\n", rs_tag_get_string(tag));
@@ -527,6 +553,29 @@ void rs_tag_set_byte_array(RSTag* self, uint32_t len, uint8_t* data)
     uint8_t* olddata = self->byte_array.data;
     self->byte_array.data = rs_memdup(data, len);
     self->byte_array.size = len;
+    if (olddata)
+        rs_free(olddata);
+}
+
+/* for int arrays */
+uint32_t* rs_tag_get_int_array(RSTag* self)
+{
+    rs_return_val_if_fail(self && self->type == RS_TAG_INT_ARRAY, NULL);
+    return self->int_array.data;
+}
+
+uint32_t rs_tag_get_int_array_length(RSTag* self)
+{
+    rs_return_val_if_fail(self && self->type == RS_TAG_INT_ARRAY, 0);
+    return self->int_array.size;
+}
+
+void rs_tag_set_int_array(RSTag* self, uint32_t len, uint32_t* data)
+{
+    rs_return_if_fail(self && self->type == RS_TAG_INT_ARRAY);
+    uint32_t* olddata = self->int_array.data;
+    self->int_array.data = rs_memdup(data, len * sizeof(uint32_t));
+    self->int_array.size = len;
     if (olddata)
         rs_free(olddata);
 }
