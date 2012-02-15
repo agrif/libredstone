@@ -416,7 +416,7 @@ static void rs_tag_print_inner(FILE* dest, RSTag* tag, const char* name, unsigne
         fprintf(dest, "%u bytes\n", rs_tag_get_byte_array_length(tag));
         break;
     case RS_TAG_INT_ARRAY:
-        fprintf(dest, "%u bytes\n", rs_tag_get_int_array_length(tag));
+        fprintf(dest, "%u ints\n", rs_tag_get_int_array_length(tag));
         break;
     case RS_TAG_STRING:
         fprintf(dest, "%s\n", rs_tag_get_string(tag));
