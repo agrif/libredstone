@@ -272,7 +272,7 @@ def get_compression_type(data):
 ## tag.h
 ##
 
-TAG_END, TAG_BYTE, TAG_SHORT, TAG_INT, TAG_LONG, TAG_FLOAT, TAG_DOUBLE, TAG_BYTE_ARRAY, TAG_STRING, TAG_LIST, TAG_COMPOUND = range(11)
+TAG_END, TAG_BYTE, TAG_SHORT, TAG_INT, TAG_LONG, TAG_FLOAT, TAG_DOUBLE, TAG_BYTE_ARRAY, TAG_STRING, TAG_LIST, TAG_COMPOUND, TAG_INT_ARRAY = range(12)
 
 class Tag(RedstoneCountedObject):
     class Methods:
@@ -289,6 +289,10 @@ class Tag(RedstoneCountedObject):
         get_byte_array = (c_void_p, [c_void_p])
         get_byte_array_length = (c_uint32, [c_void_p])
         set_byte_array = (None, [c_void_p, c_uint32, c_void_p])
+
+        get_int_array = (c_void_p, [c_void_p])
+        get_int_array_length = (c_uint32, [c_void_p])
+        set_int_array = (None, [c_void_p, c_uint32, c_void_p])
         
         # iterators are another c convenience, we do them differently
         # see __iter__
@@ -386,6 +390,26 @@ class Tag(RedstoneCountedObject):
         inbuf = ctypes.create_string_buffer(value)
         self._set_byte_array(self, ctypes.sizeof(inbuf), inbuf)
     byte_array = property(get_byte_array, set_byte_array)
+
+    def get_int_array_length(self):
+        if not self.get_type() == TAG_INT_ARRAY:
+            raise TypeError("Tag is not an int array")
+        return self._get_int_array_length(self)
+    int_array_length = property(get_int_array_length)
+    def get_int_array(self):
+        if not self.get_type() == TAG_INT_ARRAY:
+            raise TypeError("Tag is not an int array")
+        ptr = self._get_int_array(self)
+        if not ptr:
+            return None
+        return list((c_uint32 * self._get_int_array_length(self)).from_address(ptr))
+    def set_int_array(self, value):
+        if not self.get_type() == TAG_INT_ARRAY:
+            raise TypeError("Tag is not an int array")
+        size = len(value)
+        value = (c_uint32 * size)(*value)
+        self._set_int_array(self, size, ctypes.cast(value, ctypes.POINTER(c_uint32)))
+    int_array = property(get_int_array, set_int_array)
         
     def list_get_type(self):
         if not self.get_type() == TAG_LIST:
@@ -472,6 +496,8 @@ class Tag(RedstoneCountedObject):
             return self.compound_get_length()
         elif typ == TAG_BYTE_ARRAY:
             return self.get_byte_array_length()
+        elif typ == TAG_INT_ARRAY:
+            return self.get_int_array_length()
         else:
             raise TypeError("Tag type does not have a len()")
     def __getitem__(self, key):
@@ -594,6 +620,8 @@ class Tag(RedstoneCountedObject):
             return self.get_float()
         elif typ == TAG_BYTE_ARRAY:
             return self.get_byte_array()
+        elif typ == TAG_INT_ARRAY:
+            return self.get_int_array()
         elif typ == TAG_STRING:
             return self.get_string()
         elif typ == TAG_LIST:
@@ -610,6 +638,8 @@ class Tag(RedstoneCountedObject):
             self.set_float(value)
         elif typ == TAG_BYTE_ARRAY:
             self.set_byte_array(value)
+        elif typ == TAG_INT_ARRAY:
+            self.set_int_array(value)
         elif typ == TAG_STRING:
             self.set_string(value)
         elif typ == TAG_LIST:
