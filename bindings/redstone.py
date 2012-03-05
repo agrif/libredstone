@@ -387,8 +387,10 @@ class Tag(RedstoneCountedObject):
             value = value.encode()
         except AttributeError:
             pass
+        except UnicodeDecodeError:
+            pass
         inbuf = ctypes.create_string_buffer(value)
-        self._set_byte_array(self, ctypes.sizeof(inbuf), inbuf)
+        self._set_byte_array(self, ctypes.sizeof(inbuf)-1, inbuf)
     byte_array = property(get_byte_array, set_byte_array)
 
     def get_int_array_length(self):
