@@ -26,6 +26,8 @@ def find_library(name):
         
         # fallback
         return 'lib%s.dylib' % (name,)
+    elif sys.platform.startswith('linux'):
+        return "libredstone.so"
     
     return None
 
