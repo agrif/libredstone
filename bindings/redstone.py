@@ -119,13 +119,15 @@ class RedstoneMetaclass(type):
                 ctype, pytype, convert, check = getattr(p, propname)
             except ValueError:
                 ctype, pytype, convert = getattr(p, propname)
-                check = lambda o: True
+                check = None
             propname = propname.rstrip('_')
             getmeth = getattr(rs, prefix + 'get_' + propname)
             setmeth = getattr(rs, prefix + 'set_' + propname)
             
             if not convert:
                 convert = lambda s: s
+            if not check:
+                check = lambda o: True
             
             getmeth.restype = ctype
             getmeth.argtypes = [c_void_p]
@@ -746,7 +748,7 @@ class NBT(RedstoneObject):
         write_to_region = (c_bool, [c_void_p, c_void_p, c_uint8, c_uint8])
         write_to_file = (c_bool, [c_void_p, c_char_p])
     class Properties:
-        name = (c_char_p, str, None, None)
+        name = (c_char_p, str, None)
         root = (c_void_p, Tag, lambda ptr: Tag(ptr, True) if ptr else None)
     
     @classmethod
