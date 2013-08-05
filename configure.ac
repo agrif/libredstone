@@ -6,11 +6,11 @@ AC_PREREQ(2.63.2)
 
 dnl user-facing version number, usual (major.minor.patch) scheme
 m4_define(libredstone_major_version, 0)
-m4_define(libredstone_minor_version, 0)
+m4_define(libredstone_minor_version, 1)
 m4_define(libredstone_patch_version, 0)
 
 dnl libtool library version, current:revision:age scheme
-m4_define(libredstone_lt_current_version, 0)
+m4_define(libredstone_lt_current_version, 1)
 m4_define(libredstone_lt_revision_version, 0)
 m4_define(libredstone_lt_age_version, 0)
 
