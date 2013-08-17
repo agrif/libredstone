@@ -90,8 +90,9 @@ static inline char* _rs_nbt_parse_string(void** datap, uint32_t* lenp)
     if (*lenp < 2)
         return NULL;
     
-    uint16_t* data = *datap;
-    uint16_t strlen = rs_endian_uint16(data[0]);
+    uint16_t strlen;
+    memcpy(&strlen, *datap, 2);
+    strlen = rs_endian_uint16(strlen);
     if (*lenp < 2 + strlen)
         return NULL;
     
@@ -136,7 +137,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_SHORT:
         if (*lenp < 2)
             break;
-        int_short = rs_endian_int16(((int16_t*)(*datap))[0]);
+        memcpy(&int_short, *datap, 2);
+        int_short = rs_endian_int16(int_short);
         rs_tag_set_integer(ret, int_short);
         *datap += 2;
         *lenp -= 2;
@@ -144,7 +146,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_INT:
         if (*lenp < 4)
             break;
-        int_int = rs_endian_int32(((int32_t*)(*datap))[0]);
+        memcpy(&int_int, *datap, 4);
+        int_int = rs_endian_int32(int_int);
         rs_tag_set_integer(ret, int_int);
         *datap += 4;
         *lenp -= 4;
@@ -152,7 +155,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_LONG:
         if (*lenp < 8)
             break;
-        int_long = rs_endian_int64(((int64_t*)(*datap))[0]);
+        memcpy(&int_long, *datap, 8);
+        int_long = rs_endian_int64(int_long);
         rs_tag_set_integer(ret, int_long);
         *datap += 8;
         *lenp -= 8;
@@ -161,7 +165,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_FLOAT:
         if (*lenp < 4)
             break;
-        float_float = rs_endian_float(((float*)(*datap))[0]);
+        memcpy(&float_float, *datap, 4);
+        float_float = rs_endian_float(float_float);
         rs_tag_set_float(ret, float_float);
         *datap += 4;
         *lenp -= 4;
@@ -169,7 +174,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_DOUBLE:
         if (*lenp < 8)
             break;
-        float_double = rs_endian_double(((double*)(*datap))[0]);
+        memcpy(&float_double, *datap, 8);
+        float_double = rs_endian_double(float_double);
         rs_tag_set_float(ret, float_double);
         *datap += 8;
         *lenp -= 8;
@@ -178,7 +184,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_BYTE_ARRAY:
         if (*lenp < 4)
             break;
-        int_len = rs_endian_uint32(((uint32_t*)(*datap))[0]);
+        memcpy(&int_len, *datap, 4);
+        int_len = rs_endian_uint32(int_len);
         *datap += 4;
         *lenp -= 4;
         
@@ -191,7 +198,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
     case RS_TAG_INT_ARRAY:
         if (*lenp < 4)
             break;
-        int_len = rs_endian_uint32(((uint32_t*)(*datap))[0]);
+        memcpy(&int_len, *datap, 4);
+        int_len = rs_endian_uint32(int_len);
         *datap += 4;
         *lenp -= 4;
         
@@ -200,7 +208,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
         int_array = rs_new(uint32_t, int_len);
         for (i = 0; i < int_len; i++)
         {
-            int_array[i] = rs_endian_uint32(((uint32_t*)(*datap))[0]);
+            memcpy(&(int_array[i]), *datap, sizeof(uint32_t));
+            int_array[i] = rs_endian_uint32(int_array[i]);
             *datap += sizeof(uint32_t);
             *lenp -= sizeof(uint32_t);
         }
@@ -219,7 +228,8 @@ static RSTag* _rs_nbt_parse_tag(RSTagType type, void** datap, uint32_t* lenp)
         subtype = ((uint8_t*)(*datap))[0];
         *datap += 1;
         *lenp -= 1;
-        int_int = rs_endian_int32(((int32_t*)(*datap))[0]);
+        memcpy(&int_int, *datap, 4);
+        int_int = rs_endian_int32(int_int);
         *datap += 4;
         *lenp -= 4;
         
