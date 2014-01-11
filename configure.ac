@@ -15,7 +15,7 @@ m4_define(libredstone_lt_revision_version, 0)
 m4_define(libredstone_lt_age_version, 0)
 
 dnl user-facing copyright info, mostly used in docs
-m4_define(libredstone_copyright, [2013 Aaron Griffith])
+m4_define(libredstone_copyright, [2014 Aaron Griffith])
 
 dnl Handy notes for version management!
 dnl -----------------------------------
@@ -128,6 +128,7 @@ DX_XML_FEATURE(ON)
 DX_HTML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
+dnl stub info for doxygen, since breathe will end up calling it directly
 DX_INIT_DOXYGEN($PACKAGE_NAME, [Doxyfile], [source/doxygen])
 
 AM_COND_IF([DX_COND_doc], [build_docs=yes], [build_docs=no])
@@ -142,8 +143,6 @@ src/Makefile
 tools/Makefile
 bindings/Makefile
 doc/Makefile
-doc/Doxyfile
-doc/source/conf.py
 ])
 
 AC_OUTPUT

@@ -3,4 +3,5 @@ Memory Management
 
 Functions for allocating, reallocating, and freeing memory.
 
-.. doxygenfile:: memory.h
+.. autodoxygenindex:: memory.h
+   :source: libredstone

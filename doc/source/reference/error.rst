@@ -3,4 +3,5 @@ Error Handling
 
 Functions for reporting fatal and non-fatal programmer errors.
 
-.. doxygenfile:: error.h
+.. autodoxygenindex:: error.h
+   :source: libredstone

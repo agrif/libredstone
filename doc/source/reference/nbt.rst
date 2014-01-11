@@ -1,4 +1,5 @@
 NBT Reading and Writing
 =======================
 
-.. doxygenfile:: nbt.h
+.. autodoxygenindex:: nbt.h
+   :source: libredstone

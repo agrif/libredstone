@@ -1,4 +1,5 @@
 Manipulating Tags
 =================
 
-.. doxygenfile:: tag.h
+.. autodoxygenindex:: tag.h
+   :source: libredstone

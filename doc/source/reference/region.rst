@@ -8,4 +8,5 @@ It is not responsible for dealing with compression or parsing the
 data that comes out of these files; for that, see the other parts
 of libredstone.
 
-.. doxygenfile:: region.h
+.. autodoxygenindex:: region.h
+   :source: libredstone
