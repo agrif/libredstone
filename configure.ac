@@ -119,19 +119,52 @@ fi
 
 AM_CONDITIONAL([ENABLE_PYTHON], [test "$found_python" = "yes"])
 
-dnl =======
-dnl Doxygen
-dnl =======
+dnl ================
+dnl Doxygen + Sphinx
+dnl ================
 
-dnl we only want XML for sphinx to use
-DX_XML_FEATURE(ON)
-DX_HTML_FEATURE(OFF)
-DX_PDF_FEATURE(OFF)
-DX_PS_FEATURE(OFF)
-dnl stub info for doxygen, since breathe will end up calling it directly
-DX_INIT_DOXYGEN($PACKAGE_NAME, [Doxyfile], [source/doxygen])
+AC_ARG_ENABLE(docs,
+			  AS_HELP_STRING([--enable-docs], [Enable documentation]),
+			  [enable_docs=$enableval],
+			  [enable_docs=auto])
 
-AM_COND_IF([DX_COND_doc], [build_docs=yes], [build_docs=no])
+if test "$enable_docs" = "no"; then
+    found_docs="no (disabled, use --enable-docs to enable)"
+else
+    dnl check for doxygen
+    AC_CHECK_PROGS([DOXYGEN], [doxygen], [no])
+    dnl check for sphinx
+    AC_CHECK_PROGS([SPHINXBUILD], [sphinx-build sphinx-build3 sphinx-build2], [no])
+    dnl check for breathe
+    AC_MSG_CHECKING(for breathe sphinx extension)
+    python -c "import breathe" > /dev/null 2>&1
+    if test $? -ne 0 ; then
+        found_breathe=no
+    else
+        found_breathe=yes
+    fi
+    AC_MSG_RESULT($found_breathe)
+    
+    if test "x$SPHINXBUILD" = "xno"; then
+        found_docs="no (sphinx not found)"
+    else
+        if test "x$DOXYGEN" = "xno"; then
+            found_docs="no (doxygen not found)"
+        else
+            if test "x$found_breathe" = "xno"; then
+                found_docs="no (breathe not found)"
+            else
+                found_docs="yes"
+            fi
+        fi
+    fi
+fi
+
+if test "$enable_docs" = "yes" -a "$found_docs" != "yes"; then
+	AC_MSG_ERROR([$found_docs])
+fi
+
+AM_CONDITIONAL([ENABLE_DOCS], [test "$found_docs" = "yes"])
 
 dnl =================
 dnl Substitution List
@@ -158,7 +191,7 @@ Configuration:
         Source code location   : $srcdir
         Compiler               : $CC
         Installation prefix    : $prefix
-        Build documentation    : $build_docs
+        Build documentation    : $found_docs
 
 Language Bindings:
 

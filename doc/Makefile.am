@@ -1,10 +1,10 @@
 EXTRA_DIST = source
 
-if DX_COND_doc
+if ENABLE_DOCS
 
-DX_V_GEN = $(DX_V_GEN_$(V))
-DX_V_GEN_ = $(DX_V_GEN_$(AM_DEFAULT_VERBOSITY))
-DX_V_GEN_0 = @echo "  GEN   " $@;
+DOC_V_GEN = $(DOC_V_GEN_$(V))
+DOC_V_GEN_ = $(DOC_V_GEN_$(AM_DEFAULT_VERBOSITY))
+DOC_V_GEN_0 = @echo "  GEN   " $@;
 
 .PHONY: docs
 
@@ -12,7 +12,7 @@ sphinx-doc: @PACKAGE@.tag
 
 @PACKAGE@.tag: $(pkginclude_HEADERS) source/
 	@rm -rf build
-	$(DX_V_GEN) sphinx-build @srcdir@/source/ build/
+	$(DOC_V_GEN) $(SPHINXBUILD) @srcdir@/source/ build/
 	@touch @PACKAGE@.tag
 
 all-local: sphinx-doc
@@ -31,4 +31,4 @@ install-data-local: sphinx-doc
 uninstall-local:
 	rm -rf $(DESTDIR)$(docdir)/manual
 
-endif DX_COND_doc
+endif ENABLE_DOCS
