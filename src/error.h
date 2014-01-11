@@ -6,14 +6,6 @@
 #ifndef __RS_ERROR_H_INCLUDED__
 #define __RS_ERROR_H_INCLUDED__
 
-/**
- * \defgroup error Error Handling
- *
- * Functions for reporting fatal and non-fatal programmer errors.
- *
- * @{
- */
-
 #include "util.h"
 
 #include <stdbool.h>
@@ -159,5 +151,4 @@ void _rs_error_log(bool error, const char* filename, unsigned int line, const ch
         return val;                                   \
     } RS_STMT_END
 
-/** @} */
 #endif /* __RS_ERROR_H_INCLUDED__ */

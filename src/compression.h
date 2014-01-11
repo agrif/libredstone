@@ -6,17 +6,6 @@
 #ifndef __RS_COMPRESSION_H_INCLUDED__
 #define __RS_COMPRESSION_H_INCLUDED__
 
-/**
- * \defgroup compression Compression Utilities
- *
- * These functions provide compression and decompression throughout
- * libredstone, through a variety of different algorithms. There is
- * also a function to guess what compression algorithm a given set of
- * data was compressed with.
- *
- * @{
- */
-
 #include "memory.h"
 
 #include <stdint.h>
@@ -104,5 +93,4 @@ void rs_compress(RSCompressionType enc, uint8_t* rawdata, size_t rawdatalen, uin
  */
 RSCompressionType rs_get_compression_type(void* data, size_t len);
 
-/** @} */
 #endif /* __RS_COMPRESSION_H_INCLUDED__ */

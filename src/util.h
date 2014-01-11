@@ -7,14 +7,6 @@
 #define __RS_UTIL_H_INCLUDED__
 
 /**
- * \defgroup util Miscellaneous Utilities
- *
- * miscellaneous utilities that don't fit anywhere else.
- *
- * @{
- */
-
-/**
  * Begins multi-line preprocessor macros.
  *
  * Use this and RS_STMT_END to write multi-line preprocessor macros
@@ -39,5 +31,4 @@
 /** Maximum macro. */
 #define MAX(a, b) ((a) < (b) ? (b) : (a))
 
-/** @} */
 #endif /* __RS_UTIL_H_INCLUDED__ */

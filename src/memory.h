@@ -6,14 +6,6 @@
 #ifndef __RS_MEMORY_H_INCLUDED__
 #define __RS_MEMORY_H_INCLUDED__
 
-/**
- * \defgroup memory Memory Management
- *
- * Functions for allocating, reallocating, and freeing memory.
- *
- * @{
- */
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -191,5 +183,4 @@ void* rs_memdup(const void* ptr, size_t size);
  */
 #define rs_strdup(str) ((char*)rs_memdup((str), strlen(str) + 1))
 
-/** @} */
 #endif /* __RS_MEMORY_H_INCLUDED__ */

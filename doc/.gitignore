@@ -1,2 +1,4 @@
 /Doxyfile
-/reference/
+/build/
+/source/doxygen/
+/source/conf.py

@@ -1,6 +1,6 @@
 # Copyright (C) 2004 Oren Ben-Kiki
 # This file is distributed under the same terms as the Automake macro files.
-# and has been modified slightly for use in libredstone
+# and has been modified for use in libredstone
 
 # Generate automatic documentation using Doxygen. Goals and variables values
 # are controlled by the various DX_COND_??? conditionals set by autoconf.
@@ -38,6 +38,10 @@ if DX_COND_doc
 DX_V_GEN = $(DX_V_GEN_$(V))
 DX_V_GEN_ = $(DX_V_GEN_$(AM_DEFAULT_VERBOSITY))
 DX_V_GEN_0 = @echo "  GEN   " $@;
+
+SPHINX_V_GEN = $(SPHINX_V_GEN_$(V))
+SPHINX_V_GEN_ = $(SPHINX_V_GEN_$(AM_DEFAULT_VERBOSITY))
+SPHINX_V_GEN_0 = @echo "  GEN   " $@;
 
 DX_V_LATEX = $(DX_V_LATEX_$(V))
 DX_V_LATEX_ = $(DX_V_LATEX_$(AM_DEFAULT_VERBOSITY))
@@ -182,6 +186,8 @@ doxygen-doc: doxygen-run $(DX_PS_GOAL) $(DX_PDF_GOAL)
 @DX_DOCDIR@/@PACKAGE@.tag: $(DX_CONFIG) $(pkginclude_HEADERS)
 	@rm -rf @DX_DOCDIR@
 	$(DX_V_GEN) $(DX_ENV) $(DX_DOXYGEN) $(DX_CONFIG)
+	@rm -rf build
+	$(SPHINX_V_GEN) sphinx-build source/ build/
 	@touch @DX_DOCDIR@/@PACKAGE@.tag
 
 DX_CLEANFILES = \

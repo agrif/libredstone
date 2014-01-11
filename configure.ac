@@ -14,6 +14,9 @@ m4_define(libredstone_lt_current_version, 1)
 m4_define(libredstone_lt_revision_version, 0)
 m4_define(libredstone_lt_age_version, 0)
 
+dnl user-facing copyright info, mostly used in docs
+m4_define(libredstone_copyright, [2013 Aaron Griffith])
+
 dnl Handy notes for version management!
 dnl -----------------------------------
 dnl
@@ -50,6 +53,8 @@ AC_DEFINE(LIBREDSTONE_VERSION, "libredstone_version", [libredstone version])
 AC_SUBST(LIBREDSTONE_VERSION, libredstone_version)
 AC_DEFINE(LIBREDSTONE_LT_VERSION, "libredstone_lt_version", [libredstone libtool version])
 AC_SUBST(LIBREDSTONE_LT_VERSION, libredstone_lt_version)
+AC_DEFINE(LIBREDSTONE_COPYRIGHT, "libredstone_copyright", [libredstone copyright])
+AC_SUBST(LIBREDSTONE_COPYRIGHT, libredstone_copyright)
 
 AM_INIT_AUTOMAKE([1.11 -Wall foreign nostdinc dist-bzip2 no-dist-gzip])
 AM_MAINTAINER_MODE([enable])
@@ -118,10 +123,12 @@ dnl =======
 dnl Doxygen
 dnl =======
 
-DX_HTML_FEATURE(ON)
+dnl we only want XML for sphinx to use
+DX_XML_FEATURE(ON)
+DX_HTML_FEATURE(OFF)
 DX_PDF_FEATURE(OFF)
 DX_PS_FEATURE(OFF)
-DX_INIT_DOXYGEN($PACKAGE_NAME, [Doxyfile], [reference])
+DX_INIT_DOXYGEN($PACKAGE_NAME, [Doxyfile], [source/doxygen])
 
 AM_COND_IF([DX_COND_doc], [build_docs=yes], [build_docs=no])
 
@@ -136,6 +143,7 @@ tools/Makefile
 bindings/Makefile
 doc/Makefile
 doc/Doxyfile
+doc/source/conf.py
 ])
 
 AC_OUTPUT

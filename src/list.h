@@ -7,24 +7,6 @@
 #define __RS_LIST_H_INCLUDED__
 
 /**
- * \defgroup list List Manipulation
- *
- * A generic singly-linked list type.
- *
- * This is a data type used internally by libredstone, but it is
- * exposed here as a convenience to C developers who do not (by
- * default) have such a data type.
- *
- * List cells are meant to be used directly, as well as with the
- * functions outlined here; iteration is usually done by accessing the
- * data and next members directly.
- *
- * Lists of zero length are everywhere represented by the NULL pointer.
- *
- * @{
- */
-
-/**
  * A generic function used in rs_list_foreach().
  */
 typedef void (*RSListFunction)(void* data);
@@ -201,7 +183,5 @@ void rs_list_foreach(RSList* first, RSListFunction func);
  * \sa rs_list_foreach()
  */
 void rs_list_free(RSList* first);
-
-/** @} */
 
 #endif /* __RS_LIST_H_INCLUDED__ */

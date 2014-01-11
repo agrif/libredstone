@@ -6,19 +6,6 @@
 #ifndef __RS_REGION_H_INCLUDED__
 #define __RS_REGION_H_INCLUDED__
 
-/**
- * \defgroup region Region Reading and Writing
- *
- * This interface is responsible for reading data from and writing
- * data to Minecraft region files.
- *
- * It is not responsible for dealing with compression or parsing the
- * data that comes out of these files; for that, see the other parts
- * of libredstone.
- *
- * @{
- */
-
 #include "compression.h"
 
 #include <stdint.h>
@@ -219,5 +206,4 @@ void rs_region_clear_chunk(RSRegion* self, uint8_t x, uint8_t z);
  */
 void rs_region_flush(RSRegion* self);
 
-/** @} */
 #endif /* __RS_REGION_H_INCLUDED__ */
