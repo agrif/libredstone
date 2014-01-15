@@ -138,7 +138,8 @@ doxyfile = AUTOCFG_TEMPLATE.format(project_name=project, output_dir=doxy_out, in
 # on import! run doxygen. THIS IS A HACK, I'M SORRY
 import subprocess
 import os
-os.makedirs(doxy_out)
+if not os.path.isdir(doxy_out):
+    os.makedirs(doxy_out)
 p = subprocess.Popen("doxygen -", shell=True, stdin=subprocess.PIPE)
 p.communicate(doxyfile)
 del p
