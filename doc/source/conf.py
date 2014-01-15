@@ -24,7 +24,7 @@ print(srcdir("src"))
 
 with open(srcdir('configure.ac')) as f:
     _configdata = f.read()
-_configre = r'^m4_define\({},\s\[?(.*?)\]?\)'
+_configre = r'^m4_define\({0},\s\[?(.*?)\]?\)'
 _expandre = re.compile(r'libredstone_(\w+)', flags=re.I)
 
 def confkey(name):
@@ -110,10 +110,43 @@ pygments_style = 'sphinx'
 # A list of ignored prefixes for module index sorting.
 #modindex_common_prefix = []
 
+# our doxygen template
+AUTOCFG_TEMPLATE = r"""
+PROJECT_NAME     = "{project_name}"
+OUTPUT_DIRECTORY = {output_dir}
+GENERATE_LATEX   = NO
+GENERATE_MAN     = NO
+GENERATE_RTF     = NO
+CASE_SENSE_NAMES = NO
+INPUT            = {input}
+FILE_PATTERNS    = *.h
+ENABLE_PREPROCESSING = YES
+QUIET            = YES
+JAVADOC_AUTOBRIEF = YES
+JAVADOC_AUTOBRIEF = NO
+GENERATE_HTML = NO
+GENERATE_XML = YES
+ALIASES = "rst=\verbatim embed:rst"
+ALIASES += "endrst=\endverbatim"
+""".strip()
+
+# doxygen paths
+doxy_out = srcdir("doc", "build", "breathe", "doxygen", "libredstone")
+doxy_in = srcdir("src")
+doxyfile = AUTOCFG_TEMPLATE.format(project_name=project, output_dir=doxy_out, input=doxy_in)
+
+# on import! run doxygen. THIS IS A HACK, I'M SORRY
+import subprocess
+import os
+os.makedirs(doxy_out)
+p = subprocess.Popen("doxygen -", shell=True, stdin=subprocess.PIPE)
+p.communicate(doxyfile)
+del p
+
 # point breathe to our doxygen output
 breathe_default_project = "libredstone"
-breathe_projects_source = {
-    "libredstone": srcdir("src"),
+breathe_projects = {
+    "libredstone": os.path.join(doxy_out, "xml"),
 }
 
 # -- Options for HTML output ---------------------------------------------------

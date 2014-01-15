@@ -6,5 +6,4 @@ libredstone, through a variety of different algorithms. There is
 also a function to guess what compression algorithm a given set of
 data was compressed with.
 
-.. autodoxygenindex:: compression.h
-   :source: libredstone
+.. doxygenfile:: compression.h

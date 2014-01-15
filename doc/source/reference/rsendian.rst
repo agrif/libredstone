@@ -14,5 +14,4 @@ integers, as well as unsigned 24-bit integers (stored in a 32-bit
 int). There are also functions to convert floats (32-bit) and
 doubles (64-bit).
 
-.. autodoxygenindex:: rsendian.h
-   :source: libredstone
+.. doxygenfile:: rsendian.h

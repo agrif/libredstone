@@ -13,5 +13,4 @@ data and next members directly.
 
 Lists of zero length are everywhere represented by the NULL pointer.
 
-.. autodoxygenindex:: list.h
-   :source: libredstone
+.. doxygenfile:: list.h

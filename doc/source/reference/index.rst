@@ -13,4 +13,3 @@ API Reference
    tag.rst
    rsendian.rst
    util.rst
-
