@@ -25,6 +25,7 @@ C_FILES =         \
     list.c        \
     memory.c      \
     mmap-none.c   \
+    mmap-windows.c \
     nbt.c         \
     region.c      \
     tag.c

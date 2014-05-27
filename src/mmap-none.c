@@ -10,11 +10,13 @@
 #include "memory.h"
 #include "mmap.h"
 
-#include <stdio.h>
 #include <unistd.h>
 
 void* mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
 {
+	if (len == 0)
+		return MAP_FAILED;
+
 	if (prot != PROT_READ)
 		return MAP_FAILED;
 	
@@ -34,7 +36,6 @@ void* mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off)
 		}
 		
 		amount_read += res;
-		printf("read %i vs %i\n", amount_read, len);
 	}
 	
 	return data;

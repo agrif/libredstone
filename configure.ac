@@ -111,6 +111,11 @@ CHECK_MMAP_IMPL("posix", [AC_CHECK_FUNC([mmap], [
 	AC_DEFINE([MMAP_POSIX], [], [Use the Posix mmap call.])
 ], [])])
 
+CHECK_MMAP_IMPL("windows", [AC_CHECK_HEADER([windows.h], [
+	mmap_implementation="windows";
+	AC_DEFINE([MMAP_WINDOWS], [], [Use the Windows File Mapping API.])
+], [])])
+
 if test "$mmap_implementation" = "none"; then
 	AC_DEFINE([MMAP_NONE], [], [Instead of mmap, use malloc and read. (TERRIBLY INEFFICIENT)])
 fi
@@ -122,7 +127,7 @@ if test "$with_mmap" = "auto" -a "$mmap_implementation" = "none"; then
 	AC_MSG_ERROR([cannot find an mmap implementation])
 fi
 
-if test "$with_mmap" != "$mmap_implementation"; then
+if test "$with_mmap" != "auto" -a "$with_mmap" != "$mmap_implementation"; then
 	AC_MSG_ERROR([cannot find mmap implementation '$with_mmap'. Please try another.])
 fi
 
