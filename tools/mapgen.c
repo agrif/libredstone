@@ -16,10 +16,23 @@
  */
 
 #include "redstone.h"
+#include "config.h"
 #include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
 #include <stdio.h>
+
+#if HAVE_MKDIR
+#  if MKDIR_TAKES_ONE_ARG
+#    define mkdir(a, b) mkdir(a)
+#  endif
+#else
+#  if HAVE__MKDIR
+#    define mkdir(a, b) _mkdir(a)
+#  else
+#    error "Don't know how to create a directory on this system."
+#  endif
+#endif
 
 #define index_block(blocks, x, y, z) ((blocks)[y + (z) * 128 + (x) * 128 * 16])
 #define set_half_byte(dest, x, y, z, val)                               \

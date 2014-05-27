@@ -7,11 +7,11 @@
 
 #include "error.h"
 #include "memory.h"
+#include "mmap.h"
 #include "rsendian.h"
 #include "list.h"
 
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -38,7 +38,7 @@ RSNBT* rs_nbt_parse_from_file(const char* path)
     RSNBT* self;
     struct stat stat_buf;
     void* map = NULL;
-    int fd = open(path, O_RDONLY);
+    int fd = open(path, O_RDONLY | O_BINARY);
     if (fd < 0)
     {
         return NULL; /* FIXME proper error handling, later */

@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     
     RSRegion* reg = rs_region_open(argv[1], false);
     rs_assert(reg);
-
+	
     int x = 0, z = 0;
     for (z = 0; z < 32; z++)
     {

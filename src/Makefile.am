@@ -11,6 +11,7 @@ H_FILES =         \
     error.h       \
     list.h        \
     memory.h      \
+    mmap.h        \
     nbt.h         \
     region.h      \
     tag.h         \
@@ -23,6 +24,7 @@ C_FILES =         \
     error.c       \
     list.c        \
     memory.c      \
+    mmap-none.c   \
     nbt.c         \
     region.c      \
     tag.c

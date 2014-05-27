@@ -85,7 +85,46 @@ AC_HEADER_ASSERT
 AC_FUNC_MALLOC
 AC_FUNC_REALLOC
 AC_FUNC_STAT
-AC_CHECK_FUNC(mmap, [], AC_MSG_ERROR([libredstone needs a mmap implementation to work]))
+AX_FUNC_MKDIR
+
+dnl ===================
+dnl Memory Mapped Files
+dnl ===================
+
+AC_ARG_WITH(mmap, AS_HELP_STRING([--with-mmap], [set which mmap implementation to use (posix, windows, none)]), [], [with_mmap=auto])
+if test "$with_mmap" = "no"; then
+	with_mmap=none
+fi
+
+mmap_implementation=none
+
+# CHECK_MMAP_IMPL(NAME, [CHECK CODE])
+# -----------------------------------
+AC_DEFUN([CHECK_MMAP_IMPL], [
+	if test "$with_mmap" = $1 -o \( "$with_mmap" = "auto" -a "$mmap_implementation" = "none" \); then
+		$2
+	fi
+])
+
+CHECK_MMAP_IMPL("posix", [AC_CHECK_FUNC([mmap], [
+	mmap_implementation="posix";
+	AC_DEFINE([MMAP_POSIX], [], [Use the Posix mmap call.])
+], [])])
+
+if test "$mmap_implementation" = "none"; then
+	AC_DEFINE([MMAP_NONE], [], [Use the terrible, inefficient mmap backend.])
+fi
+
+if test "$with_mmap" = "auto" -a "$mmap_implementation" = "none"; then
+	AC_MSG_WARN([I cannot find an implementation of mmap, which libredstone])
+	AC_MSG_WARN([uses to read files. To use an inefficient replacement, use])
+	AC_MSG_WARN([--without-mmap as an argument to this script.])
+	AC_MSG_ERROR([cannot find an mmap implementation])
+fi
+
+if test "$with_mmap" != "$mmap_implementation"; then
+	AC_MSG_ERROR([cannot find mmap implementation '$with_mmap'. Please try another.])
+fi
 
 dnl =================
 dnl Dependency Checks
@@ -188,10 +227,11 @@ echo "
 
 Configuration:
 
-        Source code location   : $srcdir
-        Compiler               : $CC
-        Installation prefix    : $prefix
-        Build documentation    : $found_docs
+        Source code location : $srcdir
+        Compiler             : $CC
+        Installation prefix  : $prefix
+        mmap implementation  : $mmap_implementation
+        Build documentation  : $found_docs
 
 Language Bindings:
 

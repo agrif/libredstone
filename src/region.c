@@ -7,11 +7,11 @@
 
 #include "error.h"
 #include "memory.h"
+#include "mmap.h"
 #include "rsendian.h"
 #include "list.h"
 
 #include <sys/stat.h>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -21,9 +21,17 @@
  * <http://www.minecraftwiki.net/wiki/Beta_Level_Format>.
  */
 
+/* macro that expands to a packed attribute, on GCC
+   gcc_struct (as opposed to ms_struct) will pack together bitfields */
+#ifdef __GNUC__
+#define __PACKED__ __attribute__((gcc_struct, __packed__))
+#else
+#define __PACKED__ /**/
+#endif
+ 
 /* for chunk location table */
 #pragma pack(1)
-struct ChunkLocation
+struct __PACKED__ ChunkLocation
 {
     uint32_t offset:24;
     uint8_t sector_count;
@@ -68,7 +76,7 @@ RSRegion* rs_region_open(const char* path, bool write)
     RSRegion* self;
     struct stat stat_buf;
     void* map = NULL;
-    int fd = open(path, write ? (O_RDWR | O_CREAT) : O_RDONLY, 0666);
+    int fd = open(path, (write ? (O_RDWR | O_CREAT) : O_RDONLY) | O_BINARY, 0666);
     if (fd < 0)
     {
         return NULL; /* TODO proper error handling */
