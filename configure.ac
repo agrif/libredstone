@@ -112,7 +112,7 @@ CHECK_MMAP_IMPL("posix", [AC_CHECK_FUNC([mmap], [
 ], [])])
 
 if test "$mmap_implementation" = "none"; then
-	AC_DEFINE([MMAP_NONE], [], [Use the terrible, inefficient mmap backend.])
+	AC_DEFINE([MMAP_NONE], [], [Instead of mmap, use malloc and read. (TERRIBLY INEFFICIENT)])
 fi
 
 if test "$with_mmap" = "auto" -a "$mmap_implementation" = "none"; then
