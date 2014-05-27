@@ -54,7 +54,7 @@ AC_SUBST(LIBREDSTONE_VERSION, libredstone_version)
 AC_DEFINE(LIBREDSTONE_LT_VERSION, "libredstone_lt_version", [libredstone libtool version])
 AC_SUBST(LIBREDSTONE_LT_VERSION, libredstone_lt_version)
 AC_DEFINE(LIBREDSTONE_COPYRIGHT, "libredstone_copyright", [libredstone copyright])
-AC_SUBST(LIBREDSTONE_COPYRIGHT, libredstone_copyright)
+AC_SUBST(LIBREDSTONE_COPYRIGHT, "libredstone_copyright")
 
 AM_INIT_AUTOMAKE([1.11 -Wall foreign nostdinc dist-bzip2 no-dist-gzip])
 AM_MAINTAINER_MODE([enable])
