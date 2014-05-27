@@ -3,7 +3,7 @@
 # ==================
 
 lib_LTLIBRARIES = libredstone.la
-INCLUDES = -I$(top_srcdir)
+INCLUDES = -I$(top_builddir)
 
 H_FILES =         \
     compression.h \
