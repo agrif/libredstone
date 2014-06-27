@@ -1,1 +1,1 @@
-breathe
+breathe==2.0.0

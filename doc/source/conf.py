@@ -135,14 +135,18 @@ doxy_out = srcdir("doc", "build", "breathe", "doxygen", "libredstone")
 doxy_in = srcdir("src")
 doxyfile = AUTOCFG_TEMPLATE.format(project_name=project, output_dir=doxy_out, input=doxy_in)
 
-# on import! run doxygen. THIS IS A HACK, I'M SORRY
+# registered to run later
 import subprocess
 import os
-if not os.path.isdir(doxy_out):
-    os.makedirs(doxy_out)
-p = subprocess.Popen("doxygen -", shell=True, stdin=subprocess.PIPE)
-p.communicate(doxyfile)
-del p
+def generate_doxygen_xml(app):
+    if not os.path.isdir(doxy_out):
+        os.makedirs(doxy_out)
+    p = subprocess.Popen("doxygen -", shell=True, stdin=subprocess.PIPE)
+    p.communicate(doxyfile)
+
+# registered here, I mean
+def setup(app):
+    app.connect('builder-inited', generate_doxygen_xml)
 
 # point breathe to our doxygen output
 breathe_default_project = "libredstone"
