@@ -17,6 +17,10 @@
 #include <stdint.h>
 #include <time.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 /* This implemention of Minecraft's region format is based on info from
  * <http://www.minecraftwiki.net/wiki/Beta_Level_Format>.
  */

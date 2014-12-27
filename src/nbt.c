@@ -16,6 +16,10 @@
 #include <fcntl.h>
 #include <stdio.h>
 
+#ifndef O_BINARY
+#define O_BINARY 0
+#endif
+
 /* This implemention of Minecraft's NBT format is based on info from
  * <http://www.minecraft.net/docs/NBT.txt>.
  */
