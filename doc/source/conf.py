@@ -142,7 +142,7 @@ def generate_doxygen_xml(app):
     if not os.path.isdir(doxy_out):
         os.makedirs(doxy_out)
     p = subprocess.Popen("doxygen -", shell=True, stdin=subprocess.PIPE)
-    p.communicate(doxyfile)
+    p.communicate(doxyfile.encode('utf-8'))
 
 # registered here, I mean
 def setup(app):
